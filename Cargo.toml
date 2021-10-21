@@ -1,0 +1,7 @@
+[package]
+name = "letter"
+version = "0.0.0"
+edition = "2018"
+authors = ["Benjamin Eder <barny.eder@gmail.com>"]
+
+[dependencies]
