@@ -1,7 +1,7 @@
 [package]
 name = "letter"
 version = "0.0.0"
-edition = "2018"
+edition = "2021"
 authors = ["Benjamin Eder <barny.eder@gmail.com>"]
 license = "MIT"
 description = "Document layout engine"
