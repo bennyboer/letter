@@ -12,11 +12,11 @@ impl DocumentVariables {
         }
     }
 
-    pub fn set(mut self, name: &str, value: &str) {
+    pub fn set(&mut self, name: &str, value: &str) {
         self.lookup.insert(name.into(), value.into());
     }
 
-    pub fn get(self, name: &str) -> Option<String> {
+    pub fn get(&self, name: &str) -> Option<String> {
         self.lookup.get(name).map(|s| s.to_string())
     }
 }

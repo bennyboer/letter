@@ -1,5 +1,4 @@
 use comrak::markdown_to_html;
-mod document_structure;
 
 #[cfg(test)]
 mod tests {
