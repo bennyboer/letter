@@ -1,11 +1,6 @@
-[package]
-name = "letter"
-version = "0.0.0"
-edition = "2021"
-authors = ["Benjamin Eder <barny.eder@gmail.com>"]
-license = "MIT"
-description = "Document layout engine"
-readme = "README.md"
-repository = "https://github.com/bennyboer/letter"
-
-[dependencies]
+[workspace]
+members = [
+    "cli",
+    "document",
+    "script"
+]

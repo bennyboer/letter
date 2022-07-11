@@ -1,7 +1,7 @@
 [package]
-name = "script"
+name = "document"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-comrak = "0.13.2"
+sys-locale = "0.2.1"
