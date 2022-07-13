@@ -1,0 +1,19 @@
+<document>
+    <title> The document title </title>
+
+    <section>
+
+        <heading> A heading </heading>
+
+        This is a simple paragraph with some **Markdown** to spice things up!
+
+        # Another heading in Markdown format
+
+        Another paragraph in **Markdown** format.
+        And this is a line in the paragraph.
+
+        Kind of like this line belongs
+        to the next paragraph.
+
+    </section>
+</document>

@@ -1,88 +1,87 @@
-use comrak::markdown_to_html;
+use comrak::{markdown_to_html, ComrakOptions, ComrakRenderOptions};
+use document::structure::DocumentStructure;
+use html_parser::{Dom, Node};
 
-#[cfg(test)]
-mod tests {
-    use crate::*;
-    use comrak::nodes::{Ast, AstNode, NodeValue};
-    use comrak::ComrakRenderOptions;
-    use comrak::{format_html, parse_document, Arena, ComrakOptions};
+/// Parsing a document structure from the letter script format.
+/// This is done without a custom written parser since we only expect something
+/// like HTML/XML and/or Markdown.
+/// Thus we use a HTML parser to initially prepare the document tree followed by
+/// a Markdown parser that will parse every text node that the HTML parser has found.
+/// Afterwards the results of the Markdown parser need to be post-processed by the HTML
+/// parser again since it outputs HTML.
+pub fn parse_document_structure(src: &str) {
+    let dom = match Dom::parse(src) {
+        Ok(dom) => {
+            println!(
+                "[DOM] Parsing DOM succeeded -> {}",
+                dom.to_json_pretty().unwrap()
+            );
+            dom
+        }
+        Err(e) => {
+            panic!("Could not parse DOM from HTML: '{:?}'", e);
+        }
+    };
 
-    #[test]
-    fn test_1() {
-        assert_eq!(
-            markdown_to_html(
-                "<document><i>Hello</i> **there**!</document>",
-                &ComrakOptions {
-                    render: ComrakRenderOptions {
-                        unsafe_: true,
-                        ..ComrakRenderOptions::default()
-                    },
-                    ..ComrakOptions::default()
-                }
-            ),
-            "<p>Hello, <strong>世界</strong>!</p>\n"
-        );
+    println!("#########################");
+
+    let mut document_structure = DocumentStructure::new();
+
+    // Fill each node in the document structure
+    for node in &dom.children {
+        fill_node_in_document_structure(node, &mut document_structure);
     }
+}
 
-    #[test]
-    fn test_2() {
-        // The returned nodes are created in the supplied Arena, and are bound by its lifetime.
-        let arena = Arena::new();
+fn fill_node_in_document_structure(node: &Node, document_structure: &mut DocumentStructure) {
+    // TODO: Fill nodes in document structure (copy tree)
+    match node {
+        Node::Text(text) => {
+            // Split text (may contain empty lines) into paragraphs
+            let mut paragraphs = Vec::new();
+            let mut buffer = String::new();
+            for line in text.lines() {
+                if line.trim().is_empty() {
+                    paragraphs.push(buffer.to_string());
+                    buffer.clear();
+                } else {
+                    let add_new_line = !buffer.is_empty();
+                    if add_new_line {
+                        buffer += "\n";
+                    }
+                    buffer += line.trim();
+                }
+            }
+            if !buffer.is_empty() {
+                paragraphs.push(buffer.to_string());
+            }
 
-        let root = parse_document(
-            &arena,
-            "Some content before<footnote>Richtig cool</footnote>\n
-<document>
-This is my input.
+            for (i, paragraph) in paragraphs.iter().enumerate() {
+                println!("{i}: {paragraph}");
+                let html = markdown_to_html(
+                    paragraph,
+                    &ComrakOptions {
+                        render: ComrakRenderOptions {
+                            unsafe_: true,
+                            ..ComrakRenderOptions::default()
+                        },
+                        ..ComrakOptions::default()
+                    },
+                );
+                println!("[Markdown to HTML] {html}");
+            }
+            println!("----")
 
-1. Also my input.
-2. Certainly my input.
+            // TODO Rename <p> to <paragraph>, <strong> to <b>, ...
+            // TODO Remove <p> under <heading>, ...
+        }
+        Node::Element(element) => {
+            // TODO: Copy element to document structure
 
-<b>Some bold text</b>
-</document>
-",
-            &ComrakOptions::default(),
-        );
-
-        fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F)
-        where
-            F: Fn(&'a AstNode<'a>),
-        {
-            f(node);
-            for c in node.children() {
-                iter_nodes(c, f);
+            for child_node in &element.children {
+                fill_node_in_document_structure(child_node, document_structure);
             }
         }
-
-        iter_nodes(root, &|node| match &mut node.data.borrow_mut().value {
-            &mut NodeValue::Text(ref mut text) => {
-                let orig = std::mem::replace(text, vec![]);
-                let s = String::from_utf8(orig).unwrap();
-                println!("[Text] {s}");
-                *text = s.replace("my", "your").as_bytes().to_vec();
-            }
-            NodeValue::HtmlBlock(block) => {
-                let s = String::from_utf8_lossy(&block.literal);
-                println!("[HTML Block] {s}");
-            }
-            NodeValue::HtmlInline(text) => {
-                let s = String::from_utf8_lossy(text);
-                println!("[HTML Inline] {s}");
-            }
-            _ => {}
-        });
-
-        let mut html = vec![];
-        format_html(root, &ComrakOptions::default(), &mut html).unwrap();
-
-        assert_eq!(
-            String::from_utf8(html).unwrap(),
-            "<p>This is your input.</p>\n\
-     <ol>\n\
-     <li>Also your input.</li>\n\
-     <li>Certainly your input.</li>\n\
-     </ol>\n\
-     <b>Some bold text</b>"
-        );
+        _ => {}
     }
 }

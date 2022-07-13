@@ -16,8 +16,11 @@ pub struct DocumentStructure {
 }
 
 impl DocumentStructure {
-    pub fn new(nodes: HashMap<NodeId, DocumentNode>, root_node: NodeId) -> Self {
-        Self { nodes, root_node }
+    pub fn new() -> Self {
+        Self {
+            nodes: HashMap::new(),
+            root_node: 0,
+        }
     }
 
     pub fn root(&self) -> &DocumentNode {
