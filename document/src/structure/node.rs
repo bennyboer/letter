@@ -1,4 +1,4 @@
-use crate::structure::DocumentNodeValue;
+use crate::structure::{DocumentNodeValue, NodeId};
 
 pub struct DocumentNode {
     pub id: u64,
@@ -13,5 +13,9 @@ impl DocumentNode {
             children: Vec::new(),
             value,
         }
+    }
+
+    pub fn add_child(&mut self, child: NodeId) {
+        self.children.push(child);
     }
 }
