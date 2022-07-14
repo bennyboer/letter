@@ -1,26 +1,33 @@
-# The document title
+<header> The document title </header>
 
 <section>
+    <header> A heading </header>
 
-    # A heading
+    <p>
+        This is a simple paragraph with some
+        text to demo its use.
+    </p>
 
-    This is a simple paragraph with some **Markdown** to spice things up!
+    <paragraph>
+        Here we got another one that also contains
+        some <b>formatted</b> text and shows that the use of either
+        <code>&lt;p&gt;</code> or <code>&lt;/p&gt;</code>
+    </paragraph>
 
-    # Another heading in Markdown format
+    <header> This is another heading </header>
 
-    Another paragraph in **Markdown** format.
-    And this is a line in the paragraph.
-
-    Kind of like this line belongs
-    to the next paragraph.
+    <p>
+        The shortform of paragraph is mostly nicer to type.
+        Unfortunately thereby loses its meaning for unfamiliar users.
+    </p>
 
     <section>
+        <header> A subsection heading </header>
 
-        <header> A sublevel heading </header>
-
-        A sublevel paragraph with
-        some <b>bold</b> text.
-
+        <p>
+            A subsection is not invoked like in LaTeX with <code>\subsection{name}</code>
+            but rather by using the section element that will introduce a new level of the document.
+            Thereby it transforms each header element into a next level heading.
+        </p>
     </section>
-
 </section>
