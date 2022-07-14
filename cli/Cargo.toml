@@ -10,3 +10,5 @@ repository = "https://github.com/bennyboer/letter"
 
 [dependencies]
 script = { path = "../script" }
+log = "0.4.17"
+simple_logger = "2.2.0"
