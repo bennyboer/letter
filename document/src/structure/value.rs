@@ -6,7 +6,9 @@ use std::fmt::{Display, Formatter};
 pub enum DocumentNodeValue {
     DocumentRoot,
     Text(String),
-    Section,
+    Section {
+        source: Option<String>,
+    },
     Header,
     Paragraph,
     Image {

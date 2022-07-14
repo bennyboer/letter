@@ -1,5 +1,6 @@
 use document::structure::{DocumentNode, DocumentNodeValue, DocumentStructure, NodeId};
 use html_parser::{Dom, Element, Node};
+use log::warn;
 use std::error::Error;
 
 pub type ParseResult<T> = Result<T, Box<dyn Error>>;
@@ -81,10 +82,21 @@ fn is_element_to_skip(element: &Element) -> bool {
 
 fn map_element_to_document_node_value(element: &Element) -> DocumentNodeValue {
     match element.name.as_str() {
-        "section" => DocumentNodeValue::Section,
-        "header" => DocumentNodeValue::Header,
-        "p" | "paragraph" => DocumentNodeValue::Paragraph,
-        "img" | "image" => DocumentNodeValue::Image {
+        "section" | "s" => {
+            let source = element.attributes.get("src").and_then(|o| o.clone());
+            if source.is_some() && !element.children.is_empty() {
+                warn!(
+                    "Found <section> element with 'src' attribute that still has content \
+                that will not find its way into the output. You may consider either removing \
+                the content of the <section> element or removing the 'src' attribute to get \
+                rid of this warning."
+                )
+            }
+            DocumentNodeValue::Section { source }
+        }
+        "header" | "h" => DocumentNodeValue::Header,
+        "paragraph" | "p" => DocumentNodeValue::Paragraph,
+        "image" | "img" => DocumentNodeValue::Image {
             source: element
                 .attributes
                 .get("src")

@@ -1,7 +1,9 @@
-<header> The document title </header>
+<h> The document title </h>
+
+<section src="my-content.lsc" />
 
 <section>
-    <header> A heading </header>
+    <heading> A heading </heading>
 
     <p>
         This is a simple paragraph with some
@@ -14,7 +16,7 @@
         <code>&lt;p&gt;</code> or <code>&lt;/p&gt;</code>
     </paragraph>
 
-    <header> This is another heading </header>
+    <h> This is another heading </h>
 
     <p>
         The shortform of paragraph is mostly nicer to type.
@@ -22,7 +24,7 @@
     </p>
 
     <section>
-        <header> A subsection heading </header>
+        <h> A subsection heading </h>
 
         <p>
             A subsection is not invoked like in LaTeX with <code>\subsection{name}</code>
@@ -30,6 +32,6 @@
             Thereby it transforms each header element into a next level heading.
         </p>
 
-        <img src="test.png" height="5cm">
+        <img src="test.png" height="5cm" />
     </section>
 </section>

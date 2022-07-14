@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 document = { path = "../document" }
 html_parser = "0.6.3"
+log = "0.4.17"
