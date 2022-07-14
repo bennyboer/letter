@@ -5,5 +5,4 @@ edition = "2021"
 
 [dependencies]
 document = { path = "../document" }
-comrak = "0.13.2"
 html_parser = "0.6.3"

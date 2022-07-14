@@ -29,5 +29,7 @@
             but rather by using the section element that will introduce a new level of the document.
             Thereby it transforms each header element into a next level heading.
         </p>
+
+        <img src="test.png" height="5cm">
     </section>
 </section>
