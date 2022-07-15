@@ -3,18 +3,18 @@ use simple_logger::SimpleLogger;
 use std::error::Error;
 use std::{env, fs};
 
+const BANNER: &str = "\
+-------------------
+  | _ _|__|_ _  _  
+  |(/_ |  | (/_|
+-------------------";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> Result<(), Box<dyn Error>> {
     SimpleLogger::new().init().unwrap();
 
-    println!("-------------------");
-    println!(
-        "  | _ _|__|_ _  _  
-  |(/_ |  | (/_|  v{}",
-        VERSION
-    );
-    println!("-------------------\n");
+    println!("{}", BANNER);
+    println!("v{}\n", VERSION);
 
     let args: Vec<String> = env::args().collect();
     let file_path = args.get(1).expect("Expected file path as first argument");

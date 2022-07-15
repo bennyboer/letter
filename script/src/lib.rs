@@ -86,10 +86,12 @@ fn map_element_to_document_node_value(element: &Element) -> DocumentNodeValue {
             let source = element.attributes.get("src").and_then(|o| o.clone());
             if source.is_some() && !element.children.is_empty() {
                 warn!(
-                    "Found <section> element with 'src' attribute that still has content \
+                    "Found <section> element at lines {}-{} with 'src' attribute that still has content \
                 that will not find its way into the output. You may consider either removing \
                 the content of the <section> element or removing the 'src' attribute to get \
-                rid of this warning."
+                rid of this warning.",
+                    element.source_span.start_line,
+                    element.source_span.end_line
                 )
             }
             DocumentNodeValue::Section { source }
@@ -108,4 +110,11 @@ fn map_element_to_document_node_value(element: &Element) -> DocumentNodeValue {
         },
         _ => DocumentNodeValue::Custom(element.name.to_string()),
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // TODO Tests
 }

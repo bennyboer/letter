@@ -1,8 +1,6 @@
 <h> The document title </h>
 
-<section src="my-content.lsc">
-    Hello there!
-</section>
+<section src="my-content.lsc" />
 
 <section>
     <heading> A heading </heading>
