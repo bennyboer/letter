@@ -116,5 +116,30 @@ fn map_element_to_document_node_value(element: &Element) -> DocumentNodeValue {
 mod tests {
     use super::*;
 
-    // TODO Tests
+    #[test]
+    fn should_ignore_document_element() {
+        let src = "\
+<document>
+    Hello
+</document>";
+        let target = "\
+[DocumentRoot]
+  [Text(\"Hello\")]
+";
+
+        let structure = parse_document_structure(src).unwrap();
+        assert_eq!(structure.fmt_pretty(), target)
+    }
+
+    #[test]
+    fn should_not_require_document_element() {
+        let src = "Hello";
+        let target = "\
+[DocumentRoot]
+  [Text(\"Hello\")]
+";
+
+        let structure = parse_document_structure(src).unwrap();
+        assert_eq!(structure.fmt_pretty(), target)
+    }
 }

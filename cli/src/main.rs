@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("##########");
     println!("# OUTPUT #");
     println!("##########");
-    document_structure.pretty_print();
+    println!("{}", document_structure.fmt_pretty());
 
     Ok(())
 }

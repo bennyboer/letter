@@ -5,6 +5,7 @@ pub use node::DocumentNode;
 pub use value::DocumentNodeValue;
 
 use std::collections::HashMap;
+use std::fmt::Write;
 
 pub type NodeId = u64;
 
@@ -53,19 +54,23 @@ impl DocumentStructure {
         result
     }
 
-    pub fn pretty_print(&self) {
+    pub fn fmt_pretty(&self) -> String {
+        let mut result = String::new();
+
         let level = 0;
         let root_node = self.root();
-        self.pretty_print_node(root_node, level);
+        self.pretty_fmt_node(&mut result, root_node, level);
+
+        result
     }
 
-    fn pretty_print_node(&self, node: &DocumentNode, level: usize) {
+    fn pretty_fmt_node(&self, result: &mut String, node: &DocumentNode, level: usize) {
         let indent = " ".repeat(level * 2);
-        println!("{}[{}]", indent, node.value);
+        write!(result, "{}[{}]\n", indent, node.value).unwrap();
 
         for child_node_id in &node.children {
             if let Some(child_node) = self.get_node(*child_node_id) {
-                self.pretty_print_node(child_node, level + 1);
+                self.pretty_fmt_node(result, child_node, level + 1);
             }
         }
     }
