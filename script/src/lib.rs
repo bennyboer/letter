@@ -123,7 +123,7 @@ fn map_element_to_document_node_value(
             }
             DocumentNodeValue::Section { source }
         }
-        "header" | "h" => DocumentNodeValue::Header,
+        "heading" | "h" => DocumentNodeValue::Heading,
         "paragraph" | "p" => DocumentNodeValue::Paragraph,
         "image" | "img" => DocumentNodeValue::Image {
             source: element
@@ -228,7 +228,7 @@ mod tests {
       [Paragraph]
         [Text(\"Third item\")]
 "
-        )
+        );
     }
 
     #[test]
@@ -271,7 +271,7 @@ mod tests {
       [Paragraph]
         [Text(\"Third item\")]
 "
-        )
+        );
     }
 
     #[test]
@@ -299,7 +299,7 @@ mod tests {
   [Paragraph]
     [Text(\"This is another paragraph.\")]
 "
-        )
+        );
     }
 
     #[test]
@@ -331,6 +331,79 @@ Hello World!
       [Text(\"bold\")]
     [Text(\"text\\n    to verify that bold will not get a paragraph\\n    parent added.\")]
 "
-        )
+        );
+    }
+
+    #[test]
+    fn should_parse_sections_and_headings() {
+        // given: an input letter script format with some sections and headings
+        let src = "\
+<heading> My document title </heading>
+
+<section>
+
+    <h> A first-level heading </h>
+
+    <p>
+        Some paragraphs text.
+    </p>
+
+    <section>
+    
+        <heading> A second-level heading </heading>
+
+    </section>
+
+</section>";
+
+        // when: the document structure is parsed
+        let structure = parse_document_structure(src).unwrap();
+
+        // then: the sections and headings should be parsed as follows
+        assert_eq!(
+            structure.fmt_pretty(),
+            "\
+[DocumentRoot]
+  [Heading]
+    [Paragraph]
+      [Text(\"My document title\")]
+  [Section { source: None }]
+    [Heading]
+      [Paragraph]
+        [Text(\"A first-level heading\")]
+    [Paragraph]
+      [Text(\"Some paragraphs text.\")]
+    [Section { source: None }]
+      [Heading]
+        [Paragraph]
+          [Text(\"A second-level heading\")]
+"
+        );
+    }
+
+    #[test]
+    fn should_parse_an_image() {
+        // given: an input letter script format with an image element
+        let src = r#"<img src="my-image.png" />
+
+<img src="another.png" width="2cm" height="3cm" />
+
+<img src="only-height.png" height="10cm" />
+
+<img src="only-width.png" width="6cm" />"#;
+
+        // when: the document structure is parsed
+        let structure = parse_document_structure(src).unwrap();
+
+        // then: the sections and headings should be parsed as follows
+        assert_eq!(
+            structure.fmt_pretty(),
+            r#"[DocumentRoot]
+  [Image { source: "my-image.png", width: None, height: None }]
+  [Image { source: "another.png", width: Some("2cm"), height: Some("3cm") }]
+  [Image { source: "only-height.png", width: None, height: Some("10cm") }]
+  [Image { source: "only-width.png", width: Some("6cm"), height: None }]
+"#
+        );
     }
 }

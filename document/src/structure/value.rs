@@ -9,7 +9,7 @@ pub enum DocumentNodeValue {
     Section {
         source: Option<String>,
     },
-    Header,
+    Heading,
     Paragraph,
     Image {
         source: String,
@@ -19,6 +19,7 @@ pub enum DocumentNodeValue {
     List,
     ListItem,
     Custom(String),
+    // TODO Header, Footer elements
 }
 
 impl Display for DocumentNodeValue {
