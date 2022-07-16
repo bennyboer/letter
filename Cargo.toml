@@ -2,5 +2,6 @@
 members = [
     "cli",
     "document",
-    "script"
+    "script",
+    "typeset"
 ]

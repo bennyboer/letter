@@ -18,6 +18,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let args: Vec<String> = env::args().collect();
     let file_path = args.get(1).expect("Expected file path as first argument");
+
+    // TODO Read meta data file (if any) first -> otherwise create default meta data
+    // TODO Use meta data file to fetch encoding to use to read script and style files for this document
     let script = fs::read_to_string(file_path).expect("Could not read script file");
 
     let document_structure = parse_document_structure(&script)?;
