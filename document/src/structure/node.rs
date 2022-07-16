@@ -1,15 +1,19 @@
 use crate::structure::{DocumentNodeValue, NodeId};
 
+#[derive(Debug)]
 pub struct DocumentNode {
-    pub id: u64,
+    pub id: NodeId,
+    pub parent: Option<NodeId>,
     pub children: Vec<u64>,
     pub value: DocumentNodeValue,
+    // TODO attributes map (for example for the class attribute)
 }
 
 impl DocumentNode {
-    pub fn new(id: u64, value: DocumentNodeValue) -> Self {
+    pub fn new(id: NodeId, value: DocumentNodeValue) -> Self {
         Self {
             id,
+            parent: None,
             children: Vec::new(),
             value,
         }

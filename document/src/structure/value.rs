@@ -16,6 +16,8 @@ pub enum DocumentNodeValue {
         width: Option<String>,
         height: Option<String>,
     },
+    List,
+    ListItem,
     Custom(String),
 }
 

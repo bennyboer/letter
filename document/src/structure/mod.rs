@@ -41,8 +41,36 @@ impl DocumentStructure {
         self.nodes.get(&id)
     }
 
-    pub fn insert(&mut self, parent: NodeId, node: DocumentNode) {
+    /// Get a path from the root node to the given node
+    /// with all ancestors included
+    /// where the first item is the root node
+    /// and the last item is the given node.
+    pub fn get_path(&self, id: NodeId) -> Vec<&DocumentNode> {
+        let mut result = Vec::new();
+
+        self.fill_path(&mut result, id);
+
+        result.reverse();
+        result
+    }
+
+    fn fill_path<'a>(
+        self: &'a DocumentStructure,
+        ancestors: &mut Vec<&'a DocumentNode>,
+        id: NodeId,
+    ) {
+        if let Some(node) = self.get_node(id) {
+            ancestors.push(node);
+
+            if let Some(parent_node) = node.parent {
+                self.fill_path(ancestors, parent_node);
+            }
+        }
+    }
+
+    pub fn insert(&mut self, parent: NodeId, mut node: DocumentNode) {
         if let Some(parent_node) = self.nodes.get_mut(&parent) {
+            node.parent = Some(parent);
             parent_node.add_child(node.id);
             self.nodes.insert(node.id, node);
         }
