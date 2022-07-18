@@ -1,14 +1,13 @@
-use crate::linearization::Block;
-use document::structure::DocumentStructure;
+use crate::element::Page;
+use crate::result::TypesetResult;
+use document::Document;
 
+pub mod element;
 pub(crate) mod linearization;
+pub mod result;
 
-/// Linearization of a document structure is the process
-/// of turning a document tree into a flat list of "blocks".
-/// Blocks in turn are an abstract representation of a group
-/// of elements that belong together in a document.
-/// An example for a block would be a paragraph that contains of words/sentences/glyphs
-/// or an image together with a caption, etc.
-pub(crate) fn linearize(document_structure: &DocumentStructure) -> Vec<Block> {
-    vec![]
+pub fn typeset(document: &Document) -> TypesetResult<Vec<Page>> {
+    let _blocks = linearization::linearize(&document.structure)?;
+
+    Ok(vec![]) // TODO
 }
