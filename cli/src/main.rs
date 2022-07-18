@@ -1,3 +1,5 @@
+use document::meta_data::DocumentMetaData;
+use document::Document;
 use script::parse_document_structure;
 use simple_logger::SimpleLogger;
 use std::error::Error;
@@ -24,11 +26,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let script = fs::read_to_string(file_path).expect("Could not read script file");
 
     let document_structure = parse_document_structure(&script)?;
+    let document = Document {
+        meta_data: DocumentMetaData::default(),
+        structure: document_structure,
+    };
 
-    println!("##########");
-    println!("# OUTPUT #");
-    println!("##########");
-    println!("{}", document_structure.fmt_pretty());
+    typeset::typeset(&document)?;
 
     Ok(())
 }

@@ -9,6 +9,8 @@ readme = "README.md"
 repository = "https://github.com/bennyboer/letter"
 
 [dependencies]
+document = { path = "../document" }
 script = { path = "../script" }
+typeset = { path = "../typeset" }
 log = "0.4.17"
 simple_logger = "2.2.0"

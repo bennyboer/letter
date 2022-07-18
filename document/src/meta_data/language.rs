@@ -40,11 +40,6 @@ mod test {
     #[test]
     fn test_defaults() {
         let language = DocumentLanguage::default();
-        println!(
-            "{}, {}",
-            language.language_code,
-            language.region_code.unwrap_or(String::from("X"))
-        );
         assert!(
             !language.language_code.is_empty(),
             "Language code should have been set to the system default"

@@ -1,4 +1,6 @@
-use document::structure::{DocumentNode, DocumentNodeValue, DocumentStructure, NodeId};
+use document::structure::{
+    DocumentNode, DocumentNodeValue, DocumentStructure, NodeId, SourcePosition, SourceSpan,
+};
 use html_parser::{Dom, Element, Node};
 use log::warn;
 use std::error::Error;
@@ -41,10 +43,10 @@ fn fill_node_in_document_structure(
 
 fn fill_text_node_to_document_structure(
     text: &String,
-    parent_node: NodeId,
+    parent_node_id: NodeId,
     document_structure: &mut DocumentStructure,
 ) {
-    let mut path = document_structure.get_path(parent_node);
+    let mut path = document_structure.get_path(parent_node_id);
     path.reverse();
     let has_paragraph_ancestor = path
         .iter()
@@ -55,23 +57,27 @@ fn fill_text_node_to_document_structure(
         .is_some();
 
     let create_paragraph_parent = !has_paragraph_ancestor;
-    let parent_node = if create_paragraph_parent {
+    let parent_node_id = if create_paragraph_parent {
         let document_node_id = document_structure.unused_node_id();
         let value = DocumentNodeValue::Paragraph;
-        let document_node = DocumentNode::new(document_node_id, value);
+        let source_span = document_structure
+            .get_node(parent_node_id)
+            .expect("A node at this point must have a parent")
+            .source_span;
+        let document_node = DocumentNode::new(document_node_id, value, source_span);
 
-        document_structure.insert(parent_node, document_node);
+        document_structure.insert(parent_node_id, document_node);
 
         document_node_id
     } else {
-        parent_node
+        parent_node_id
     };
 
     let document_node_id = document_structure.unused_node_id();
     let value = DocumentNodeValue::Text(text.to_string());
-    let document_node = DocumentNode::new(document_node_id, value);
+    let document_node = DocumentNode::new(document_node_id, value, None);
 
-    document_structure.insert(parent_node, document_node);
+    document_structure.insert(parent_node_id, document_node);
 }
 
 fn fill_element_to_document_structure(
@@ -85,7 +91,14 @@ fn fill_element_to_document_structure(
     } else {
         let document_node_id = document_structure.unused_node_id();
         let value = map_element_to_document_node_value(element, parent_node, document_structure);
-        let document_node = DocumentNode::new(document_node_id, value);
+        let source_span = SourceSpan::new(
+            SourcePosition::new(
+                element.source_span.start_line,
+                element.source_span.start_column,
+            ),
+            SourcePosition::new(element.source_span.end_line, element.source_span.end_column),
+        );
+        let document_node = DocumentNode::new(document_node_id, value, Some(source_span));
         document_structure.insert(parent_node, document_node);
         document_node_id
     };
@@ -121,7 +134,10 @@ fn map_element_to_document_node_value(
                     element.source_span.end_line
                 )
             }
-            DocumentNodeValue::Section { source }
+
+            // TODO: Include child nodes from given src when src is given
+
+            DocumentNodeValue::Section
         }
         "heading" | "h" => DocumentNodeValue::Heading,
         "paragraph" | "p" => DocumentNodeValue::Paragraph,
@@ -175,7 +191,7 @@ mod tests {
             "\
 [DocumentRoot]
   [Paragraph]
-    [Text(\"Hello\")]
+    [Text(\"\\n    Hello\\n\")]
 "
         );
     }
@@ -196,6 +212,38 @@ mod tests {
   [Paragraph]
     [Text(\"Hello\")]
 "
+        );
+    }
+
+    #[test]
+    fn should_parse_paragraph_with_some_formatting() {
+        // given: an input letter script format with a paragraph and some formatting
+        let src = r#"
+<p>
+    This is a simple paragraph with some <b>formatting</b>.
+    Additionally it <i>con</i>tains wei<i>rd</i> formatting choices!
+</p>
+"#;
+
+        // when: the document structure is parsed
+        let structure = parse_document_structure(src).unwrap();
+
+        // then: the resulting structure should look like the following
+        assert_eq!(
+            structure.fmt_pretty(),
+            r#"[DocumentRoot]
+  [Paragraph]
+    [Text("\n    This is a simple paragraph with some ")]
+    [Custom("b")]
+      [Text("formatting")]
+    [Text(".\n    Additionally it ")]
+    [Custom("i")]
+      [Text("con")]
+    [Text("tains wei")]
+    [Custom("i")]
+      [Text("rd")]
+    [Text(" formatting choices!\n")]
+"#
         );
     }
 
@@ -295,9 +343,9 @@ mod tests {
             "\
 [DocumentRoot]
   [Paragraph]
-    [Text(\"This is some text!\")]
+    [Text(\"\\n    This is some text!\\n\")]
   [Paragraph]
-    [Text(\"This is another paragraph.\")]
+    [Text(\"\\n    This is another paragraph.\\n\")]
 "
         );
     }
@@ -324,12 +372,12 @@ Hello World!
             "\
 [DocumentRoot]
   [Paragraph]
-    [Text(\"Hello World!\")]
+    [Text(\"Hello World!\\n\\n\")]
   [Paragraph]
-    [Text(\"This is another example\\n    with some\")]
+    [Text(\"\\n    This is another example\\n    with some \")]
     [Custom(\"b\")]
       [Text(\"bold\")]
-    [Text(\"text\\n    to verify that bold will not get a paragraph\\n    parent added.\")]
+    [Text(\" text\\n    to verify that bold will not get a paragraph\\n    parent added.\\n\")]
 "
         );
     }
@@ -366,17 +414,17 @@ Hello World!
 [DocumentRoot]
   [Heading]
     [Paragraph]
-      [Text(\"My document title\")]
-  [Section { source: None }]
+      [Text(\" My document title \")]
+  [Section]
     [Heading]
       [Paragraph]
-        [Text(\"A first-level heading\")]
+        [Text(\" A first-level heading \")]
     [Paragraph]
-      [Text(\"Some paragraphs text.\")]
-    [Section { source: None }]
+      [Text(\"\\n        Some paragraphs text.\\n    \")]
+    [Section]
       [Heading]
         [Paragraph]
-          [Text(\"A second-level heading\")]
+          [Text(\" A second-level heading \")]
 "
         );
     }

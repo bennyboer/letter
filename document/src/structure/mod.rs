@@ -1,7 +1,9 @@
 mod node;
+mod source_span;
 mod value;
 
 pub use node::DocumentNode;
+pub use source_span::{SourcePosition, SourceSpan};
 pub use value::DocumentNodeValue;
 
 use std::collections::HashMap;
@@ -20,7 +22,7 @@ pub struct DocumentStructure {
 impl DocumentStructure {
     pub fn new() -> Self {
         let root_node_id = 0;
-        let root_node = DocumentNode::new(root_node_id, DocumentNodeValue::DocumentRoot);
+        let root_node = DocumentNode::new(root_node_id, DocumentNodeValue::DocumentRoot, None);
 
         let mut nodes = HashMap::new();
         nodes.insert(root_node_id, root_node);

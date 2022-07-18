@@ -1,3 +1,5 @@
+extern crate core;
+
 use crate::element::Page;
 use crate::result::TypesetResult;
 use document::Document;
