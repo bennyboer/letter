@@ -7,6 +7,7 @@ use image::ImageBlock;
 use list::ListBlock;
 use text::TextBlock;
 
+#[derive(Debug)]
 pub(crate) struct Block {
     pub(crate) document_structure_node: NodeId,
     pub(crate) value: BlockValue,
@@ -21,6 +22,7 @@ impl Block {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum BlockValue {
     Text(TextBlock),
     Image(ImageBlock),

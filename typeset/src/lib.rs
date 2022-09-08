@@ -6,10 +6,19 @@ use document::Document;
 
 pub mod element;
 pub(crate) mod linearization;
+pub(crate) mod relative;
 pub mod result;
 
 pub fn typeset(document: &Document) -> TypesetResult<Vec<Page>> {
-    let _blocks = linearization::linearize(&document.structure)?;
+    let blocks = linearization::linearize(&document.structure)?;
+
+    println!("### BLOCKS ###");
+    println!("{:#?}", blocks);
+
+    let groups = relative::typeset_relatively(&blocks)?;
+
+    println!("### GROUPS ###");
+    println!("{:#?}", groups);
 
     Ok(vec![]) // TODO
 }

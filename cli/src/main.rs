@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     SimpleLogger::new().init().unwrap();
 
     println!("{}", BANNER);
-    println!("v{}\n", VERSION);
+    println!("      v{}\n", VERSION);
 
     let args: Vec<String> = env::args().collect();
     let file_path = args.get(1).expect("Expected file path as first argument");

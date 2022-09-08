@@ -1,18 +1,19 @@
-/// Linearization of a document structure is the process
-/// of turning a document tree into a flat list of "blocks".
-/// Blocks in turn are an abstract representation of a group
-/// of elements that belong together in a document.
-/// An example for a block would be a paragraph that contains of words/sentences/glyphs
-/// or an image together with a caption, etc.
+//! Linearization of a document structure is the process
+//! of turning a document tree into a flat list of "blocks".
+//! Blocks in turn are an abstract representation of a group
+//! of elements that belong together in a document.
+//! An example for a block would be a paragraph that contains of words/sentences/glyphs
+//! or an image together with a caption, etc.
+
 mod block;
 mod context;
 
-use crate::linearization::block::image::ImageBlock;
-use crate::linearization::block::list::ListBlock;
-use crate::linearization::block::text::{
+pub(crate) use crate::linearization::block::image::ImageBlock;
+pub(crate) use crate::linearization::block::list::ListBlock;
+pub(crate) use crate::linearization::block::text::{
     TextBlock, TextBlockPart, TextBlockPartTextValue, TextBlockPartValue,
 };
-use crate::linearization::block::BlockValue;
+pub(crate) use crate::linearization::block::BlockValue;
 use crate::TypesetResult;
 pub(crate) use block::Block;
 use context::LinearizationContext;

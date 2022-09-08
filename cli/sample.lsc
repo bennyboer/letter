@@ -32,6 +32,11 @@
             Thereby it transforms each header element into a next level heading.
         </p>
 
+        <list>
+            <item>Item 1</item>
+            <item>Item 2</item>
+        </list>
+
         <img src="test.png" height="5cm" />
     </section>
 </section>
