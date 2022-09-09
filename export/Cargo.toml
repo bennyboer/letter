@@ -1,0 +1,9 @@
+[package]
+name = "export"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+typeset = { path = "../typeset" }
+log = "0.4.17"
+printpdf = "0.5.3"

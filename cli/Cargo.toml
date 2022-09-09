@@ -12,5 +12,6 @@ repository = "https://github.com/bennyboer/letter"
 document = { path = "../document" }
 script = { path = "../script" }
 typeset = { path = "../typeset" }
+export = { path = "../export" }
 log = "0.4.17"
 simple_logger = "2.2.0"

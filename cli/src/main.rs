@@ -1,5 +1,6 @@
 use document::meta_data::DocumentMetaData;
 use document::Document;
+use export::ExportType;
 use script::parse_document_structure;
 use simple_logger::SimpleLogger;
 use std::error::Error;
@@ -31,7 +32,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         structure: document_structure,
     };
 
-    typeset::typeset(&document)?;
+    let pages = typeset::typeset(&document)?;
+
+    export::export(pages, ExportType::PDF)?;
 
     Ok(())
 }
