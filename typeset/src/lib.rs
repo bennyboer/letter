@@ -4,6 +4,7 @@ use crate::element::Page;
 use crate::result::TypesetResult;
 use document::Document;
 
+pub(crate) mod absolute;
 pub mod element;
 pub(crate) mod linearization;
 pub(crate) mod relative;
@@ -12,13 +13,5 @@ pub mod result;
 pub fn typeset(document: &Document) -> TypesetResult<Vec<Page>> {
     let blocks = linearization::linearize(&document.structure)?;
 
-    println!("### BLOCKS ###");
-    println!("{:#?}", blocks);
-
-    let groups = relative::typeset_relatively(&blocks)?;
-
-    println!("### GROUPS ###");
-    println!("{:#?}", groups);
-
-    Ok(vec![]) // TODO
+    return absolute::typeset_absolutely(&blocks);
 }

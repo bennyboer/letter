@@ -9,5 +9,13 @@ log = "0.4.17"
 harfbuzz_rs = "2.0.1"
 harfbuzz-sys = { version = "0.5.0", default-features = false }
 
+[dependencies.uuid]
+version = "1.1.2"
+features = [
+    "v4",
+    "fast-rng",
+    "macro-diagnostics"
+]
+
 [dev-dependencies]
 script = { path = "../script" }
