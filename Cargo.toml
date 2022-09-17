@@ -4,5 +4,6 @@ members = [
     "document",
     "export",
     "script",
-    "typeset"
+    "typeset",
+    "unit"
 ]

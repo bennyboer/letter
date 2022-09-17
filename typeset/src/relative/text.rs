@@ -16,7 +16,10 @@ pub(crate) fn typeset_text_block(block: &TextBlock) -> TypesetResult<TypesetElem
     let line_width: f64 = 180.0; // TODO Get the line width per line separately, unit is probably millimeters, but should be configurable
     let font_size: f64 = 12.0; // TODO Make configurable
     let line_height: f64 = font_size * 0.5; // TODO Make configurable
-    let white_space_width: f64 = calculate_text_width(" ")?; // TODO Can probably be removed when using the Knuth-Plass algorithm
+    let white_space_width: f64 = calculate_text_width(" ")? * font_size * 0.4; // TODO Can probably be removed when using the Knuth-Plass algorithm
+
+    // Line width is in mm? -> then line-height and font_size must be as well (currently points)
+
 
     let mut offset = Position::zero();
     let mut elements = vec![];
@@ -27,7 +30,7 @@ pub(crate) fn typeset_text_block(block: &TextBlock) -> TypesetResult<TypesetElem
             // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
             for text_part in text.split_whitespace() {
                 // TODO Return complete shaper result and store in typeset element for text
-                let width = (calculate_text_width(text_part)?) * font_size;
+                let width = (calculate_text_width(text_part)?) * font_size *0.4;
 
                 let mut offset_after_text_part = offset.x() + width;
 
