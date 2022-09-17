@@ -1,4 +1,5 @@
 use harfbuzz_rs::{shape, Face, Font, UnicodeBuffer};
+use unit::{Distance, DistanceUnit};
 
 use crate::{
     element::{
@@ -13,13 +14,12 @@ use crate::{
 pub(crate) fn typeset_text_block(block: &TextBlock) -> TypesetResult<TypesetElement> {
     // Using the trivial line breaking algorithm to typeset the text (to be replaced by a better alternative)
     // TODO: Use the Knuth-Plass Algorithm to typeset the text block -> Convert to Box-Glue-Model first
-    let line_width: f64 = 180.0; // TODO Get the line width per line separately, unit is probably millimeters, but should be configurable
-    let font_size: f64 = 12.0; // TODO Make configurable
-    let line_height: f64 = font_size * 0.5; // TODO Make configurable
-    let white_space_width: f64 = calculate_text_width(" ")? * font_size * 0.4; // TODO Can probably be removed when using the Knuth-Plass algorithm
+    let line_width = Distance::new(170.0, DistanceUnit::Millimeter); // TODO Get the line width per line separately, unit is probably millimeters, but should be configurable
+    let font_size = Distance::new(12.0, DistanceUnit::Points); // TODO Make configurable
+    let line_height = font_size * 1.2; // TODO Make configurable
+    let white_space_width: Distance = calculate_text_width(" ", font_size)?; // TODO Can probably be removed when using the Knuth-Plass algorithm
 
     // Line width is in mm? -> then line-height and font_size must be as well (currently points)
-
 
     let mut offset = Position::zero();
     let mut elements = vec![];
@@ -30,19 +30,20 @@ pub(crate) fn typeset_text_block(block: &TextBlock) -> TypesetResult<TypesetElem
             // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
             for text_part in text.split_whitespace() {
                 // TODO Return complete shaper result and store in typeset element for text
-                let width = (calculate_text_width(text_part)?) * font_size *0.4;
+                let width = calculate_text_width(text_part, font_size)?;
 
                 let mut offset_after_text_part = offset.x() + width;
 
-                let needs_whitespace_prefix = offset.x() != 0.0;
-                if needs_whitespace_prefix {
-                    offset_after_text_part += white_space_width;
-                }
-
                 let break_line = offset_after_text_part > line_width;
                 if break_line {
-                    offset = Position::absolute(0.0, offset.y() + line_height);
+                    offset = Position::absolute(Distance::zero(), offset.y() + line_height);
                     offset_after_text_part = offset.x() + width;
+                }
+
+                let needs_whitespace_prefix = offset.x() != Distance::zero();
+                if needs_whitespace_prefix {
+                    offset_after_text_part += white_space_width;
+                    offset = Position::absolute(offset.x() + white_space_width, offset.y());
                 }
 
                 let bounds = Bounds {
@@ -80,13 +81,13 @@ pub(crate) fn typeset_text_block(block: &TextBlock) -> TypesetResult<TypesetElem
     Ok(result_element)
 }
 
-fn calculate_text_width(text: &str) -> TypesetResult<f64> {
+fn calculate_text_width(text: &str, font_size: Distance) -> TypesetResult<Distance> {
     // TODO This will parse the font each invovation which is expensive -> Refactor to only create font and buffer once
 
     let font_path = "C:/repo/kerning/fonts/Adobe/TisaPro/TisaPro.otf";
     let font_face_index = 0;
     let font_face = Face::from_file(font_path, font_face_index)?;
-    let units_per_em = font_face.upem() as f64;
+    let units_per_em = font_face.upem() as usize;
     let font = Font::new(font_face);
 
     let buffer = UnicodeBuffer::new().add_str(text);
@@ -95,11 +96,25 @@ fn calculate_text_width(text: &str) -> TypesetResult<f64> {
     let positions = output.get_glyph_positions();
     let infos = output.get_glyph_infos();
 
-    let mut width: f64 = 0.0;
+    let mut width = Distance::new(
+        0.0,
+        DistanceUnit::FontUnits {
+            units_per_em,
+            font_size: 1.0,
+        },
+    );
     for (position, _info) in positions.iter().zip(infos) {
-        // println!("{:?} | {:?}", info, position);
-        width += position.x_advance as f64;
+        // TODO Why is there no kerning?
+
+        let x_advance = Distance::new(
+            position.x_advance as f64,
+            DistanceUnit::FontUnits {
+                units_per_em,
+                font_size: 1.0,
+            },
+        );
+        width += x_advance;
     }
 
-    Ok(width / units_per_em)
+    Ok(width * font_size)
 }

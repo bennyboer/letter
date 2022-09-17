@@ -285,6 +285,7 @@ dependencies = [
  "log",
  "printpdf",
  "typeset",
+ "unit",
 ]
 
 [[package]]

@@ -78,7 +78,7 @@ impl TypesettingContext {
         self.pages
     }
 
-    fn available_height_on_current_page(&self) -> f64 {
+    fn available_height_on_current_page(&self) -> Distance {
         let total_height = self.page_constraints.size.height;
         total_height - self.page_constraints.top - self.page_constraints.bottom
     }
@@ -88,6 +88,6 @@ pub(crate) enum ElementAddResult {
     Success,
     NotEnoughSpaceAvailableOnPage {
         element: TypesetElement,
-        available_height: f64,
+        available_height: Distance,
     },
 }

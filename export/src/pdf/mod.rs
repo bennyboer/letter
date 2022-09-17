@@ -2,12 +2,11 @@ use std::{fs::File, io::BufWriter};
 
 use printpdf::{Mm, PdfDocument};
 use typeset::element::Page;
+use unit::DistanceUnit;
 
 use crate::result::ExportResult;
 
 pub(crate) fn export_as_pdf(pages: Vec<Page>) -> ExportResult<()> {
-    println!("{:#?}", pages);
-
     let (document, page_index, layer_index) =
         PdfDocument::new("Letter test output", Mm(210.0), Mm(297.0), "Layer 1");
     let mut is_first_page = true;
@@ -58,8 +57,8 @@ fn draw_elements_on_layer(
                 pdf_layer.use_text(
                     &content.text,
                     12.0,
-                    Mm(20.0 + position.x()),
-                    Mm(297.0 - 20.0 - position.y()),
+                    Mm(20.0 + position.x().value(DistanceUnit::Millimeter)),
+                    Mm(297.0 - 20.0 - position.y().value(DistanceUnit::Millimeter)),
                     &font,
                 );
             }

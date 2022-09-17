@@ -84,6 +84,16 @@ impl ops::Mul<Distance> for Distance {
     }
 }
 
+impl ops::Mul<f64> for Distance {
+    type Output = Distance;
+
+    fn mul(self, factor: f64) -> Distance {
+        let base_value_left = self.value(DistanceUnit::Millimeter);
+
+        Distance::new(base_value_left * factor, DistanceUnit::Millimeter)
+    }
+}
+
 impl ops::Div<Distance> for Distance {
     type Output = Distance;
 
@@ -92,6 +102,16 @@ impl ops::Div<Distance> for Distance {
         let base_value_right = to_divide.value(DistanceUnit::Millimeter);
 
         Distance::new(base_value_left / base_value_right, DistanceUnit::Millimeter)
+    }
+}
+
+impl ops::Div<f64> for Distance {
+    type Output = Distance;
+
+    fn div(self, divisor: f64) -> Distance {
+        let base_value_left = self.value(DistanceUnit::Millimeter);
+
+        Distance::new(base_value_left / divisor, DistanceUnit::Millimeter)
     }
 }
 

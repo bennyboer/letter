@@ -45,11 +45,25 @@ fn should_multiply_two_distances() {
 }
 
 #[test]
+fn should_multiply_by_float() {
+    let a = Distance::new(2.0, DistanceUnit::Centimeter);
+
+    assert_eq!(4.0, (a * 2.0).value(DistanceUnit::Centimeter));
+}
+
+#[test]
 fn should_divide_two_distances() {
     let a = Distance::new(2.0, DistanceUnit::Centimeter);
     let b = Distance::new(5.0, DistanceUnit::Millimeter);
 
     assert_eq!(4.0, (a / b).value(DistanceUnit::Millimeter));
+}
+
+#[test]
+fn should_divide_by_float() {
+    let a = Distance::new(2.0, DistanceUnit::Centimeter);
+
+    assert_eq!(1.0, (a / 2.0).value(DistanceUnit::Centimeter));
 }
 
 #[test]
