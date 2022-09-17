@@ -2,4 +2,4 @@ mod distance;
 mod unit;
 
 pub use distance::Distance;
-pub use unit::DistanceUnit;
+pub use self::unit::DistanceUnit;
