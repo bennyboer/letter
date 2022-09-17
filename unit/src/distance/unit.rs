@@ -1,6 +1,6 @@
 use crate::UnitValue;
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DistanceUnit {
     /// The base unit for the library is Millimeters.
     Millimeter,

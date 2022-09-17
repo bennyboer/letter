@@ -1,18 +1,20 @@
+use unit::Distance;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Size {
-    pub width: f64,
-    pub height: f64,
+    pub width: Distance,
+    pub height: Distance,
 }
 
 impl Size {
     pub fn zero() -> Self {
         Self {
-            width: 0.0,
-            height: 0.0,
+            width: Distance::zero(),
+            height: Distance::zero(),
         }
     }
 
-    pub fn new(width: f64, height: f64) -> Self {
+    pub fn new(width: Distance, height: Distance) -> Self {
         Self { width, height }
     }
 }

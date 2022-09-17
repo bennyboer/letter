@@ -1,32 +1,37 @@
+use unit::Distance;
+
 use super::ElementId;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Position {
     Absolute {
-        x: f64,
-        y: f64,
+        x: Distance,
+        y: Distance,
     },
     Relative {
         elementId: ElementId,
-        x: f64,
-        y: f64,
+        x: Distance,
+        y: Distance,
     },
 }
 
 impl Position {
     pub fn zero() -> Self {
-        Position::Absolute { x: 0.0, y: 0.0 }
+        Position::Absolute {
+            x: Distance::zero(),
+            y: Distance::zero(),
+        }
     }
 
-    pub fn absolute(x: f64, y: f64) -> Self {
+    pub fn absolute(x: Distance, y: Distance) -> Self {
         Position::Absolute { x, y }
     }
 
-    pub fn relativeTo(elementId: ElementId, x: f64, y: f64) -> Self {
+    pub fn relativeTo(elementId: ElementId, x: Distance, y: Distance) -> Self {
         Position::Relative { elementId, x, y }
     }
 
-    pub fn x(&self) -> f64 {
+    pub fn x(&self) -> Distance {
         match self {
             Position::Absolute { x, y: _ } => *x,
             Position::Relative {
@@ -37,7 +42,7 @@ impl Position {
         }
     }
 
-    pub fn y(&self) -> f64 {
+    pub fn y(&self) -> Distance {
         match self {
             Position::Absolute { x: _, y } => *y,
             Position::Relative {

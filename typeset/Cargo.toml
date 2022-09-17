@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 document = { path = "../document" }
+unit = { path = "../unit" }
 log = "0.4.17"
 harfbuzz_rs = "2.0.1"
 harfbuzz-sys = { version = "0.5.0", default-features = false }

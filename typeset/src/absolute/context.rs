@@ -1,3 +1,5 @@
+use unit::{Distance, DistanceUnit};
+
 use crate::element::{Page, PageConstraints, Position, Size, TypesetElement};
 
 pub(crate) struct TypesettingContext {
@@ -8,15 +10,20 @@ pub(crate) struct TypesettingContext {
 
 impl TypesettingContext {
     pub fn new() -> Self {
+        let page_size = Size::new(
+            Distance::new(210.0, DistanceUnit::Millimeter),
+            Distance::new(297.0, DistanceUnit::Millimeter),
+        ); // TODO Make page size configurable
+
         Self {
             pages: Vec::new(),
             offset: Position::zero(),
             page_constraints: PageConstraints {
-                size: Size::new(210.0, 297.0), // TODO: Currently means mm, should be replaced in the future with some internal unit
-                top: 20.0,
-                bottom: 20.0,
-                left: 20.0,
-                right: 20.0,
+                size: page_size,
+                top: Distance::new(20.0, DistanceUnit::Millimeter), // TODO Make page margin configurable
+                bottom: Distance::new(20.0, DistanceUnit::Millimeter),
+                left: Distance::new(20.0, DistanceUnit::Millimeter),
+                right: Distance::new(20.0, DistanceUnit::Millimeter),
             },
         }
     }
