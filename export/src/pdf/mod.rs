@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufWriter};
 
-use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point};
+use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point, TextRenderingMode};
 use typeset::element::{DocumentLayout, ElementId, Page, Position};
 use unit::{Distance, DistanceUnit};
 
@@ -77,13 +77,41 @@ fn draw_elements_on_layer(
                     draw_elements_on_layer(document, pdf_layer, document_layout, &content.elements);
                 }
                 typeset::element::TypesetElementContent::TextSlice(content) => {
-                    pdf_layer.use_text(
-                        &content.text,
-                        font_size.value(DistanceUnit::Points),
+                    pdf_layer.begin_text_section();
+
+                    pdf_layer.set_font(&font, font_size.value(DistanceUnit::Points));
+                    pdf_layer.set_text_cursor(
                         Mm(position.x().value(DistanceUnit::Millimeter)),
-                        Mm(297.0 - (position.y() + font_size).value(DistanceUnit::Millimeter)), // TODO Use page constraints to get total page height of 297.0mm
-                        &font,
+                        Mm(297.0 - (position.y() + font_size).value(DistanceUnit::Millimeter)),
                     );
+
+                    // TODO Find "normal" codepoint width for each glyph for the current font
+                    // TODO And calculate the difference between the text shaper result x_advance -> pass difference to write_positioned_codepoints
+                    let mut advance_adjustments = Vec::new();
+                    let mut next_advance_adjustment = Distance::zero();
+                    for glyph_details in &content.glyphs {
+                        let advance_adjustment =
+                            glyph_details.font_x_advance - glyph_details.x_advance;
+
+                        advance_adjustments.push(next_advance_adjustment);
+                        next_advance_adjustment = advance_adjustment;
+                    }
+                    let converted_advance_adjustments =
+                        advance_adjustments.iter().map(|adjustment| {
+                            adjustment.value(DistanceUnit::FontUnits {
+                                units_per_em: 1000,
+                                font_size: font_size.value(DistanceUnit::Millimeter),
+                            }) as i64
+                        });
+                    let codepoints = content
+                        .glyphs
+                        .iter()
+                        .map(|glyph_details| glyph_details.codepoint as u16);
+
+                    pdf_layer
+                        .write_positioned_codepoints(converted_advance_adjustments.zip(codepoints));
+
+                    pdf_layer.end_text_section();
                 }
                 _ => {}
             };

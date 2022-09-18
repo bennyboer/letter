@@ -4,8 +4,8 @@ use unit::{Distance, DistanceUnit};
 use crate::{
     context::TypesettingContext,
     element::{
-        Bounds, ElementId, Position, Size, TextSliceContent, TypesetElement, TypesetElementContent,
-        TypesetElementGroup,
+        Bounds, ElementId, GlyphDetails, Position, Size, TextSliceContent, TypesetElement,
+        TypesetElementContent, TypesetElementGroup,
     },
     linearization::TextBlock,
     linearization::TextBlockPartValue::Text,
@@ -23,7 +23,7 @@ pub(crate) fn typeset_text_block(
     let line_width = Distance::new(170.0, DistanceUnit::Millimeter); // TODO Get the line width per line separately - configurable!
     let font_size = Distance::new(12.0, DistanceUnit::Points); // TODO Make configurable
     let line_height = font_size * 1.2; // TODO Make configurable
-    let white_space_width: Distance = calculate_text_width(" ", font_size)?; // TODO Can probably be removed when using the Knuth-Plass algorithm
+    let white_space_width: Distance = shape_text(" ", font_size)?.width; // TODO Can probably be removed when using the Knuth-Plass algorithm
 
     let element_id = ElementId::new();
     let mut offset = Position::relative_to(element_id, Distance::zero(), Distance::zero());
@@ -38,7 +38,8 @@ pub(crate) fn typeset_text_block(
             // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
             for text_part in text.split_whitespace() {
                 // TODO Return complete shaper result and store in typeset element for text
-                let text_part_width = calculate_text_width(text_part, font_size)?;
+                let shaped_text_part = shape_text(text_part, font_size)?;
+                let text_part_width = shaped_text_part.width;
 
                 let needs_whitespace_prefix = line_x_advance != Distance::zero();
                 if needs_whitespace_prefix {
@@ -64,6 +65,7 @@ pub(crate) fn typeset_text_block(
 
                 let bounds = Bounds::new(offset, Size::new(text_part_width, line_height));
                 let content = TypesetElementContent::TextSlice(TextSliceContent {
+                    glyphs: shaped_text_part.glyphs,
                     text: text_part.to_string(),
                 });
                 let element = TypesetElement::new(bounds, content);
@@ -90,8 +92,13 @@ pub(crate) fn typeset_text_block(
     Ok(result_element)
 }
 
-// TODO Extract calculate_text_with to some kind of shaper-service that can be mocked in tests
-fn calculate_text_width(text: &str, font_size: Distance) -> TypesetResult<Distance> {
+struct TextShaperResult {
+    width: Distance,
+    glyphs: Vec<GlyphDetails>,
+}
+
+// TODO Extract shape_text to some kind of shaper-service that can be mocked in tests
+fn shape_text(text: &str, font_size: Distance) -> TypesetResult<TextShaperResult> {
     // TODO This will parse the font each invovation which is expensive -> Refactor to only create font and buffer once
 
     let font_path = "C:/repo/kerning/fonts/Adobe/TisaPro/TisaPro.otf";
@@ -110,21 +117,36 @@ fn calculate_text_width(text: &str, font_size: Distance) -> TypesetResult<Distan
         0.0,
         DistanceUnit::FontUnits {
             units_per_em,
-            font_size: 1.0,
+            font_size: font_size.value(DistanceUnit::Millimeter),
         },
     );
-    for (position, _info) in positions.iter().zip(infos) {
-        // TODO Why is there no kerning?
-
+    let mut glyphs = Vec::new();
+    for (position, info) in positions.iter().zip(infos) {
+        let codepoint = info.codepoint;
+        let font_x_advance = Distance::new(
+            font.get_glyph_h_advance(codepoint) as f64,
+            DistanceUnit::FontUnits {
+                units_per_em,
+                font_size: font_size.value(DistanceUnit::Millimeter),
+            },
+        );
         let x_advance = Distance::new(
             position.x_advance as f64,
             DistanceUnit::FontUnits {
                 units_per_em,
-                font_size: 1.0,
+                font_size: font_size.value(DistanceUnit::Millimeter),
             },
         );
+        let glyph_details = GlyphDetails {
+            codepoint: codepoint,
+            cluster: info.cluster,
+            x_advance,
+            font_x_advance,
+        };
+
         width += x_advance;
+        glyphs.push(glyph_details);
     }
 
-    Ok(width * font_size)
+    Ok(TextShaperResult { width, glyphs })
 }

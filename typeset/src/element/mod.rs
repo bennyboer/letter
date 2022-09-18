@@ -5,6 +5,7 @@ pub use page::Page;
 pub use page_constraints::PageConstraints;
 pub use position::Position;
 pub use size::Size;
+use unit::Distance;
 
 mod bounds;
 mod id;
@@ -70,5 +71,20 @@ pub struct TypesetElementGroup {
 
 #[derive(Debug)]
 pub struct TextSliceContent {
-    pub text: String,
+    pub glyphs: Vec<GlyphDetails>,
+    pub text: String, // TODO Can be removed
+}
+
+#[derive(Debug)]
+pub struct GlyphDetails {
+    pub codepoint: u32,
+    pub cluster: u32,
+
+    /// Horizontal advance from the text shaping process.
+    /// This includes distance adjustments like kerning.
+    pub x_advance: Distance,
+
+    /// X-advance directly from the used font.
+    /// This will not take any distance adjustments into account like kerning.
+    pub font_x_advance: Distance,
 }
