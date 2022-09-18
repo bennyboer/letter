@@ -1,4 +1,4 @@
-use std::ops;
+use std::{fmt::Display, ops};
 
 use crate::UnitValue;
 
@@ -31,6 +31,13 @@ impl Distance {
         let base_value = self.unit.to_base(self.value);
         return unit.from_base(base_value);
     }
+
+    pub fn formatted(&self, unit: DistanceUnit) -> String {
+        let value = self.value(unit);
+        let unit_shortform = unit.shortform();
+
+        format!("{value} {unit_shortform}")
+    }
 }
 
 impl ops::Add<Distance> for Distance {
@@ -61,6 +68,14 @@ impl ops::Sub<Distance> for Distance {
         let base_value_right = to_subtract.value(DistanceUnit::Millimeter);
 
         Distance::new(base_value_left - base_value_right, DistanceUnit::Millimeter)
+    }
+}
+
+impl ops::Neg for Distance {
+    type Output = Distance;
+
+    fn neg(self) -> Distance {
+        Distance::zero() - self
     }
 }
 
@@ -127,5 +142,11 @@ impl PartialOrd for Distance {
         } else {
             return Some(std::cmp::Ordering::Greater);
         }
+    }
+}
+
+impl Display for Distance {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{}", self.formatted(self.unit))
     }
 }

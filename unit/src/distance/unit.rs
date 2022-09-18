@@ -47,4 +47,20 @@ impl DistanceUnit {
     pub fn from_base(&self, base_value: UnitValue) -> UnitValue {
         base_value / self.base_factor()
     }
+
+    pub fn shortform(&self) -> &str {
+        match self {
+            DistanceUnit::Millimeter => "mm",
+            DistanceUnit::Centimeter => "cm",
+            DistanceUnit::Decimeter => "dm",
+            DistanceUnit::Meter => "m",
+            DistanceUnit::Inch => "in",
+            DistanceUnit::Points => "pt",
+            DistanceUnit::Pixel { dots_per_inch: _ } => "px",
+            DistanceUnit::FontUnits {
+                units_per_em: _,
+                font_size: _,
+            } => "FUnits",
+        }
+    }
 }

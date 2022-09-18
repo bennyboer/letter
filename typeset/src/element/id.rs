@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct ElementId {
     value: Uuid,
 }

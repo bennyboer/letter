@@ -1,6 +1,13 @@
 use crate::{Distance, DistanceUnit};
 
 #[test]
+fn should_negate_distance() {
+    let a = Distance::new(0.254, DistanceUnit::Meter);
+
+    assert_eq!(-254.0, (-a).value(DistanceUnit::Millimeter));
+}
+
+#[test]
 fn should_add_two_distances() {
     let a = Distance::new(16.0, DistanceUnit::Points);
     let b = Distance::new(2.0, DistanceUnit::Centimeter);

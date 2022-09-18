@@ -8,16 +8,21 @@
 mod text;
 
 use crate::{
-    element::TypesetElement,
+    context::TypesettingContext,
+    element::{Position, TypesetElement},
     linearization::{Block, BlockValue},
     result::TypesetResult,
 };
 
 use self::text::typeset_text_block;
 
-pub(crate) fn typeset_relatively(block: &Block) -> TypesetResult<TypesetElement> {
+pub(crate) fn typeset_relatively(
+    block: &Block,
+    anchor: Position,
+    ctx: &mut TypesettingContext,
+) -> TypesetResult<TypesetElement> {
     match &block.value {
-        BlockValue::Text(text_block) => Ok(typeset_text_block(&text_block)?),
+        BlockValue::Text(text_block) => Ok(typeset_text_block(&text_block, anchor, ctx)?),
         _ => Err(format!(
             "The block value '{:?}' is currently unsupported by relative typesetting",
             block.value

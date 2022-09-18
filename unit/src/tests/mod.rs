@@ -1,9 +1,10 @@
-mod millimeter;
 mod centimeter;
 mod decimeter;
-mod meter;
-mod inch;
-mod points;
-mod pixel;
+mod display;
 mod font_units;
+mod inch;
+mod meter;
+mod millimeter;
 mod operators;
+mod pixel;
+mod points;

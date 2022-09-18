@@ -1,16 +1,18 @@
 pub use bounds::Bounds;
 pub use id::ElementId;
+pub use layout::DocumentLayout;
 pub use page::Page;
+pub use page_constraints::PageConstraints;
 pub use position::Position;
 pub use size::Size;
-pub use page_constraints::PageConstraints;
 
 mod bounds;
 mod id;
+mod layout;
 mod page;
+mod page_constraints;
 mod position;
 mod size;
-mod page_constraints;
 
 #[derive(Debug)]
 pub struct TypesetElement {
@@ -20,6 +22,14 @@ pub struct TypesetElement {
 }
 
 impl TypesetElement {
+    pub fn of(id: ElementId, bounds: Bounds, content: TypesetElementContent) -> Self {
+        Self {
+            id,
+            bounds,
+            content,
+        }
+    }
+
     pub fn new(bounds: Bounds, content: TypesetElementContent) -> Self {
         Self {
             id: ElementId::new(),
@@ -28,8 +38,16 @@ impl TypesetElement {
         }
     }
 
+    pub fn id(&self) -> ElementId {
+        self.id
+    }
+
     pub fn bounds(&self) -> &Bounds {
         &self.bounds
+    }
+
+    pub fn bounds_mut(&mut self) -> &mut Bounds {
+        &mut self.bounds
     }
 
     pub fn content(&self) -> &TypesetElementContent {
@@ -39,6 +57,7 @@ impl TypesetElement {
 
 #[derive(Debug)]
 pub enum TypesetElementContent {
+    Page,
     Group(TypesetElementGroup),
     TextSlice(TextSliceContent),
     Image,
@@ -46,7 +65,7 @@ pub enum TypesetElementContent {
 
 #[derive(Debug)]
 pub struct TypesetElementGroup {
-    pub elements: Vec<TypesetElement>,
+    pub elements: Vec<ElementId>,
 }
 
 #[derive(Debug)]

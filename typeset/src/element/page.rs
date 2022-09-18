@@ -1,17 +1,19 @@
-use super::TypesetElement;
+use super::ElementId;
 
 /// A representation of a page of a typeset document
 /// that contains a list of absolutely positioned elements.
 #[derive(Debug)]
 pub struct Page {
     number: usize,
-    elements: Vec<TypesetElement>,
+    element: ElementId,
+    elements: Vec<ElementId>,
 }
 
 impl Page {
-    pub fn new(number: usize) -> Self {
+    pub fn new(number: usize, element: ElementId) -> Self {
         Self {
             number,
+            element,
             elements: Vec::new(),
         }
     }
@@ -20,12 +22,16 @@ impl Page {
         self.number
     }
 
-    pub fn add_element(&mut self, element: TypesetElement) -> &Self {
-        self.elements.push(element);
+    pub fn add_element(&mut self, element_id: ElementId) -> &Self {
+        self.elements.push(element_id);
         self
     }
 
-    pub fn elements(&self) -> &[TypesetElement] {
+    pub fn elements(&self) -> &[ElementId] {
         &self.elements
+    }
+
+    pub fn element(&self) -> ElementId {
+        self.element
     }
 }

@@ -9,7 +9,7 @@ pub enum Position {
         y: Distance,
     },
     Relative {
-        elementId: ElementId,
+        element_id: ElementId,
         x: Distance,
         y: Distance,
     },
@@ -27,15 +27,15 @@ impl Position {
         Position::Absolute { x, y }
     }
 
-    pub fn relativeTo(elementId: ElementId, x: Distance, y: Distance) -> Self {
-        Position::Relative { elementId, x, y }
+    pub fn relative_to(element_id: ElementId, x: Distance, y: Distance) -> Self {
+        Position::Relative { element_id, x, y }
     }
 
     pub fn x(&self) -> Distance {
         match self {
             Position::Absolute { x, y: _ } => *x,
             Position::Relative {
-                elementId: _,
+                element_id: _,
                 x,
                 y: _,
             } => *x,
@@ -46,7 +46,7 @@ impl Position {
         match self {
             Position::Absolute { x: _, y } => *y,
             Position::Relative {
-                elementId: _,
+                element_id: _,
                 x: _,
                 y,
             } => *y,

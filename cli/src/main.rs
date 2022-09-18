@@ -32,9 +32,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         structure: document_structure,
     };
 
-    let pages = typeset::typeset(&document)?;
+    let document_layout = typeset::typeset(&document)?;
 
-    export::export(pages, ExportType::PDF)?;
+    export::export(document_layout, ExportType::PDF)?;
 
     Ok(())
 }

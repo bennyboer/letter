@@ -1,9 +1,15 @@
+use std::collections::HashMap;
+
 use unit::{Distance, DistanceUnit};
 
-use crate::element::{Page, PageConstraints, Position, Size, TypesetElement};
+use crate::element::{
+    Bounds, DocumentLayout, ElementId, Page, PageConstraints, Position, Size, TypesetElement,
+    TypesetElementContent,
+};
 
 pub(crate) struct TypesettingContext {
     pages: Vec<Page>,
+    element_lookup: HashMap<ElementId, TypesetElement>,
     offset: Position,
     page_constraints: PageConstraints,
 }
@@ -17,6 +23,7 @@ impl TypesettingContext {
 
         Self {
             pages: Vec::new(),
+            element_lookup: HashMap::new(),
             offset: Position::zero(),
             page_constraints: PageConstraints {
                 size: page_size,
@@ -30,7 +37,22 @@ impl TypesettingContext {
 
     pub fn new_page(&mut self) {
         let next_page_number = self.last_page_number() + 1;
-        self.pages.push(Page::new(next_page_number));
+        let page_bounds = Bounds::new(
+            Position::absolute(self.page_constraints.left, self.page_constraints.top),
+            Size::new(
+                self.page_constraints.size.width
+                    - self.page_constraints.left
+                    - self.page_constraints.right,
+                self.page_constraints.size.height
+                    - self.page_constraints.top
+                    - self.page_constraints.bottom,
+            ),
+        );
+        let page_element = TypesetElement::new(page_bounds, TypesetElementContent::Page);
+        let page = Page::new(next_page_number, page_element.id());
+
+        self.pages.push(page);
+        self.element_lookup.insert(page_element.id(), page_element);
         self.offset = Position::zero();
     }
 
@@ -52,7 +74,8 @@ impl TypesettingContext {
         self.page_constraints.top += size.height;
 
         let page = self.last_page();
-        page.add_element(element);
+        page.add_element(element.id());
+        self.element_lookup.insert(element.id(), element);
 
         ElementAddResult::Success
     }
@@ -78,9 +101,21 @@ impl TypesettingContext {
         self.pages
     }
 
+    pub(crate) fn current_page(&self) -> &Page {
+        self.pages.last().unwrap()
+    }
+
+    pub(crate) fn to_layout(self) -> DocumentLayout {
+        DocumentLayout::new(self.pages, self.element_lookup)
+    }
+
     fn available_height_on_current_page(&self) -> Distance {
         let total_height = self.page_constraints.size.height;
         total_height - self.page_constraints.top - self.page_constraints.bottom
+    }
+
+    pub(crate) fn register_element(&mut self, element: TypesetElement) {
+        self.element_lookup.insert(element.id(), element);
     }
 }
 

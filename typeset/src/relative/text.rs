@@ -2,8 +2,9 @@ use harfbuzz_rs::{shape, Face, Font, UnicodeBuffer};
 use unit::{Distance, DistanceUnit};
 
 use crate::{
+    context::TypesettingContext,
     element::{
-        Bounds, Position, Size, TextSliceContent, TypesetElement, TypesetElementContent,
+        Bounds, ElementId, Position, Size, TextSliceContent, TypesetElement, TypesetElementContent,
         TypesetElementGroup,
     },
     linearization::TextBlock,
@@ -11,18 +12,25 @@ use crate::{
     result::TypesetResult,
 };
 
-pub(crate) fn typeset_text_block(block: &TextBlock) -> TypesetResult<TypesetElement> {
+/// Typeset the given text block relative to the given anchor element.
+pub(crate) fn typeset_text_block(
+    block: &TextBlock,
+    anchor: Position,
+    ctx: &mut TypesettingContext,
+) -> TypesetResult<TypesetElement> {
     // Using the trivial line breaking algorithm to typeset the text (to be replaced by a better alternative)
     // TODO: Use the Knuth-Plass Algorithm to typeset the text block -> Convert to Box-Glue-Model first
-    let line_width = Distance::new(170.0, DistanceUnit::Millimeter); // TODO Get the line width per line separately, unit is probably millimeters, but should be configurable
+    let line_width = Distance::new(170.0, DistanceUnit::Millimeter); // TODO Get the line width per line separately - configurable!
     let font_size = Distance::new(12.0, DistanceUnit::Points); // TODO Make configurable
     let line_height = font_size * 1.2; // TODO Make configurable
     let white_space_width: Distance = calculate_text_width(" ", font_size)?; // TODO Can probably be removed when using the Knuth-Plass algorithm
 
-    // Line width is in mm? -> then line-height and font_size must be as well (currently points)
-
-    let mut offset = Position::zero();
+    let element_id = ElementId::new();
+    let mut offset = Position::relative_to(element_id, Distance::zero(), Distance::zero());
     let mut elements = vec![];
+    let mut last_element = element_id;
+    let mut line_x_advance = Distance::zero();
+    let mut max_size = Size::new(Distance::zero(), line_height);
     for part in &block.parts {
         if let Text(text_value) = &part.value {
             let text = &text_value.value;
@@ -30,57 +38,59 @@ pub(crate) fn typeset_text_block(block: &TextBlock) -> TypesetResult<TypesetElem
             // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
             for text_part in text.split_whitespace() {
                 // TODO Return complete shaper result and store in typeset element for text
-                let width = calculate_text_width(text_part, font_size)?;
+                let text_part_width = calculate_text_width(text_part, font_size)?;
 
-                let mut offset_after_text_part = offset.x() + width;
-
-                let break_line = offset_after_text_part > line_width;
-                if break_line {
-                    offset = Position::absolute(Distance::zero(), offset.y() + line_height);
-                    offset_after_text_part = offset.x() + width;
-                }
-
-                let needs_whitespace_prefix = offset.x() != Distance::zero();
+                let needs_whitespace_prefix = line_x_advance != Distance::zero();
                 if needs_whitespace_prefix {
-                    offset_after_text_part += white_space_width;
-                    offset = Position::absolute(offset.x() + white_space_width, offset.y());
+                    line_x_advance += white_space_width;
+                    offset = Position::relative_to(
+                        last_element,
+                        offset.x() + white_space_width,
+                        offset.y(),
+                    );
                 }
 
-                let bounds = Bounds {
-                    position: offset,
-                    size: Size {
-                        width,
-                        height: line_height,
-                    },
-                };
+                let break_line = line_x_advance + text_part_width > line_width;
+                if break_line {
+                    offset = Position::relative_to(
+                        last_element,
+                        offset.x() - line_x_advance,
+                        offset.y() + line_height,
+                    );
+                    line_x_advance = Distance::zero();
+
+                    max_size.height += line_height;
+                }
+
+                let bounds = Bounds::new(offset, Size::new(text_part_width, line_height));
                 let content = TypesetElementContent::TextSlice(TextSliceContent {
                     text: text_part.to_string(),
                 });
-                elements.push(TypesetElement::new(bounds, content));
+                let element = TypesetElement::new(bounds, content);
+                last_element = element.id();
+                elements.push(element.id());
+                ctx.register_element(element); // TODO Refactor be be a TypesetElementSink -> sink.process(element);
 
-                offset = Position::absolute(offset_after_text_part, offset.y());
+                line_x_advance += text_part_width;
+                offset = Position::relative_to(last_element, text_part_width, Distance::zero());
+
+                if line_x_advance > max_size.width {
+                    max_size.width = line_x_advance;
+                }
             }
         }
     }
 
-    let first_element_bounds = elements.first().map_or(Bounds::empty(), |e| *e.bounds());
-    let last_element_bounds = elements.last().map_or(Bounds::empty(), |e| *e.bounds());
-    let result_bounds = Bounds {
-        position: first_element_bounds.position,
-        size: Size::new(
-            last_element_bounds.position.x() + last_element_bounds.size.width
-                - first_element_bounds.position.x(),
-            last_element_bounds.position.y() + last_element_bounds.size.height
-                - first_element_bounds.position.y(),
-        ),
-    };
-    let result_element = TypesetElement::new(
+    let result_bounds = Bounds::new(anchor, max_size);
+    let result_element = TypesetElement::of(
+        element_id,
         result_bounds,
         TypesetElementContent::Group(TypesetElementGroup { elements }),
     );
     Ok(result_element)
 }
 
+// TODO Extract calculate_text_with to some kind of shaper-service that can be mocked in tests
 fn calculate_text_width(text: &str, font_size: Distance) -> TypesetResult<Distance> {
     // TODO This will parse the font each invovation which is expensive -> Refactor to only create font and buffer once
 
