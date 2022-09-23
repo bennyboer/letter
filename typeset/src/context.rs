@@ -57,7 +57,6 @@ impl TypesettingContext {
     }
 
     pub fn add_element_to_page(&mut self, element: TypesetElement) -> ElementAddResult {
-        let position = element.bounds().position();
         let size = element.bounds().size();
 
         let available_height = self.available_height_on_current_page();
@@ -68,10 +67,7 @@ impl TypesettingContext {
             };
         }
 
-        self.offset = Position::absolute(position.x() + size.width, position.y() + size.height);
-
-        // TODO Not sure if we should block the whole height of the page here or take the actual width of the element to add into account?
-        self.page_constraints.top += size.height;
+        self.offset = Position::absolute(Distance::zero(), self.offset.y() + size.height); // TODO Also offset on x-axis?
 
         let page = self.last_page();
         page.add_element(element.id());
@@ -111,7 +107,7 @@ impl TypesettingContext {
 
     fn available_height_on_current_page(&self) -> Distance {
         let total_height = self.page_constraints.size.height;
-        total_height - self.page_constraints.top - self.page_constraints.bottom
+        total_height - self.page_constraints.top - self.page_constraints.bottom - self.offset.y()
     }
 
     pub(crate) fn register_element(&mut self, element: TypesetElement) {

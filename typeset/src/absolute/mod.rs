@@ -1,4 +1,3 @@
-use log::info;
 use unit::Distance;
 
 use crate::{
@@ -12,15 +11,10 @@ use crate::{
 pub(crate) fn typeset_absolutely(blocks: &[Block]) -> TypesetResult<DocumentLayout> {
     let mut iteration = 0;
     loop {
-        info!(
-            "[Typesetting] Absolute typesetting iteration {}",
-            iteration + 1
-        );
-
         let pages = layout_blocks_to_pages(blocks)?;
 
-        let references_stable = check_references_stable();
-        if references_stable {
+        let layout_stable = check_layout_stable();
+        if layout_stable {
             return Ok(pages);
         }
 
@@ -59,10 +53,15 @@ fn layout_blocks_to_pages(blocks: &[Block]) -> TypesetResult<DocumentLayout> {
                 Distance::zero(),
             ));
             ctx.add_element_to_page(element);
+            // TODO What if the element does not have enough space on the new page either? -> Force add it to page even if it overflows!
         }
     }
 
     Ok(ctx.to_layout())
+}
+
+fn check_layout_stable() -> bool {
+    check_references_stable()
 }
 
 // TODO Do once references are implemented
