@@ -1,0 +1,9 @@
+[package]
+name = "style"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+unit = { path = "../unit" }
+log = "0.4.17"
+cssparser = "0.29.6"
