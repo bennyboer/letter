@@ -103,6 +103,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "colorsys"
+version = "0.6.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52c2ad453c82bd637e3969dc52f06676610db0b20c607bf0634c7e9d840789e8"
+
+[[package]]
 name = "const_fn"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -926,6 +932,7 @@ checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 name = "style"
 version = "0.1.0"
 dependencies = [
+ "colorsys",
  "cssparser",
  "log",
  "unit",
