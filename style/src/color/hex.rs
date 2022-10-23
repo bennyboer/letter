@@ -9,7 +9,7 @@ pub struct HexColor {
 }
 
 impl HexColor {
-    pub fn new(value: usize) -> Self {
+    pub const fn new(value: usize) -> Self {
         Self { value }
     }
 
