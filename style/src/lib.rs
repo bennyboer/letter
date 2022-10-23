@@ -1,4 +1,4 @@
-use model::DocumentStyles;
+pub use model::DocumentStyles;
 
 mod color;
 mod model;

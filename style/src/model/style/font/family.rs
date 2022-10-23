@@ -31,7 +31,7 @@ impl FontFamilyStyle {
     }
 
     pub fn families_ordered_by_preference(&self) -> &[FontFamily] {
-        &self.families_ordered_by_preference[..]
+        &self.families_ordered_by_preference
     }
 }
 
