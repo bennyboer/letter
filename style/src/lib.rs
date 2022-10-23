@@ -14,18 +14,18 @@ impl DocumentStyles {
         Self {}
     }
 
-    pub fn resolve_style(by_method: StyleResolveMethod) -> StyleDefinition {
-        match by_method {
-            StyleResolveMethod::NodeName(node_name) => todo!(),
-            StyleResolveMethod::ClassName(class_name) => todo!(),
-        }
+    pub fn resolve_style(_command: ResolveStyleCommand) -> StyleDefinition {
+        todo!()
     }
 }
 
-pub enum StyleResolveMethod {
-    NodeName(String),
-    ClassName(String),
+pub struct ResolveStyleCommand {
+    pub node_name: NodeName,
+    pub classes: Vec<ClassName>,
 }
+
+pub type ClassName = String;
+pub type NodeName = String;
 
 pub type StyleId = usize;
 
