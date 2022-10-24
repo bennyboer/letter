@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::{
-    class::ClassName, definition::StyleDefinition, id::StyleId, node::NodeName, target::StyleTarget,
+    class::ClassName, id::StyleId, node::NodeName, target::StyleTarget,
 };
 
 pub(crate) struct StyleResolver {
@@ -17,7 +17,7 @@ impl StyleResolver {
         }
     }
 
-    pub(crate) fn resolve(&self, _target: StyleTarget) -> Option<StyleDefinition> {
+    pub(crate) fn resolve(&self, _target: StyleTarget) -> Option<StyleId> {
         // TODO Lookup by node name and class name (for each class name -> one lookup)
         // TODO Merge all found style definitions together
         // TODO If having a duplicate style (for example font-size) -> NodeName < ClassName (if multiple classes reference font-size -> just choose the first occurrence)

@@ -1,1 +1,1 @@
-pub type StyleId = usize;
+pub type StyleId = u64;
