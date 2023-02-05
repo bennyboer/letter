@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 document = { path = "../document" }
-html_parser = { git = "https://github.com/bennyboer/html-parser", branch = "letter" }
 log = "0.4.17"
+quick-xml = "0.27.1"

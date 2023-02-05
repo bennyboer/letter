@@ -1,10 +1,12 @@
+use std::error::Error;
+use std::{env, fs};
+
+use simple_logger::SimpleLogger;
+
 use document::meta_data::DocumentMetaData;
 use document::Document;
 use export::ExportType;
 use script::parse_document_structure;
-use simple_logger::SimpleLogger;
-use std::error::Error;
-use std::{env, fs};
 
 const BANNER: &str = "\
 -------------------
@@ -27,14 +29,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let script = fs::read_to_string(file_path).expect("Could not read script file");
 
     let document_structure = parse_document_structure(&script)?;
-    let document = Document {
-        meta_data: DocumentMetaData::default(),
+    let _document = Document {
+        meta_data: DocumentMetaData::default(), // TODO Read meta data from config file
         structure: document_structure,
     };
-
-    let document_layout = typeset::typeset(&document)?;
-
-    export::export(document_layout, ExportType::PDF)?;
+    //
+    // let document_layout = typeset::typeset(&document)?;
+    //
+    // export::export(document_layout, ExportType::PDF)?;
 
     Ok(())
 }

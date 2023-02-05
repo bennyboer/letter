@@ -1,0 +1,27 @@
+<section>
+    <header>First level headline - very big</header>
+
+    <paragraph>
+        This is a simple paragraph that consists of one or multiple sentences. <break/>
+        The sentences do not need to make sense.
+    </paragraph>
+
+    <image src="path/to/the/image.svg">
+        This is the description of the image.
+    </image>
+
+    <section src="path/to/section/introduction.xml"></section>
+
+    <table format="csv" csv-separator=";"> <!-- Alternatively with src="file.csv" -->
+        Hallo; Welt
+        Text; Text
+    </table>
+
+    <section>
+        <header>Second level headline - big</header>
+
+        <paragraph>
+            Again some text in a paragraph.
+        </paragraph>
+    </section>
+</section>
