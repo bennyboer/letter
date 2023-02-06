@@ -29,14 +29,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let script = fs::read_to_string(file_path).expect("Could not read script file");
 
     let document_structure = parse_document_structure(&script)?;
-    let _document = Document {
+    let document = Document {
         meta_data: DocumentMetaData::default(), // TODO Read meta data from config file
         structure: document_structure,
     };
-    //
-    // let document_layout = typeset::typeset(&document)?;
-    //
-    // export::export(document_layout, ExportType::PDF)?;
+
+    let document_layout = typeset::typeset(&document)?;
+
+    export::export(document_layout, ExportType::PDF)?;
 
     Ok(())
 }

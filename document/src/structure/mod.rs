@@ -1,13 +1,13 @@
-mod node;
-mod source_span;
-mod value;
-
-pub use node::DocumentNode;
-pub use source_span::{SourcePosition, SourceSpan};
-pub use value::DocumentNodeValue;
-
 use std::collections::HashMap;
 use std::fmt::Write;
+
+pub use node::DocumentNode;
+pub use source_position::SourcePosition;
+pub use value::DocumentNodeValue;
+
+mod node;
+mod source_position;
+mod value;
 
 pub type NodeId = u64;
 

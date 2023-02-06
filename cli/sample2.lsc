@@ -1,5 +1,5 @@
 <section>
-    <header>First level headline - very big</header>
+    <heading>First level headline - very big</heading>
 
     <paragraph>
         This is a simple paragraph that consists of one or multiple sentences. <break/>
@@ -17,8 +17,14 @@
         Text; Text
     </table>
 
+    <list>
+        <list-item>First item</list-item>
+        <list-item>Second item</list-item>
+        <list-item>Third item</list-item>
+    </list>
+
     <section>
-        <header>Second level headline - big</header>
+        <heading>Second level headline - big</heading>
 
         <paragraph>
             Again some text in a paragraph.

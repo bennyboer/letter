@@ -116,17 +116,12 @@ fn linearize_paragraph_node(
                 parts.push(part);
             }
             DocumentNodeValue::Image { .. } => panic!("Inline images are not yet supported"), // TODO
-            DocumentNodeValue::Custom(_) => {
-                for child_node in &node.children {
-                    linearize_paragraph_node(*child_node, document_structure, parts)?;
-                }
-            }
-            _ => match node.source_span {
+            _ => match node.source_position {
                 None => panic!("Encountered unsupported element in paragraph"),
                 Some(source_span) => {
                     error!(
-                        "Encountered unsupported element in paragraph at lines {}-{}",
-                        source_span.start.line, source_span.end.line
+                        "Encountered unsupported element in paragraph at {}-{}",
+                        source_span.line, source_span.line
                     );
                     exit(1);
                 }

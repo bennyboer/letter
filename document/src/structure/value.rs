@@ -16,7 +16,8 @@ pub enum DocumentNodeValue {
     },
     List,
     ListItem,
-    Custom(String),
+    Table,
+    Break,
     // TODO Header, Footer elements
 }
 

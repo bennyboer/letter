@@ -1,6 +1,7 @@
 use std::{fs::File, io::BufWriter};
 
-use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point, TextRenderingMode};
+use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point};
+
 use typeset::element::{DocumentLayout, ElementId, Page, Position};
 use unit::{Distance, DistanceUnit};
 
