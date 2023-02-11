@@ -11,6 +11,7 @@ repository = "https://github.com/bennyboer/letter"
 [dependencies]
 document = { path = "../document" }
 script = { path = "../script" }
+layout = { path = "../layout" }
 typeset = { path = "../typeset" }
 export = { path = "../export" }
 log = "0.4.17"
