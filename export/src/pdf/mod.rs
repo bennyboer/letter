@@ -2,7 +2,8 @@ use std::{fs::File, io::BufWriter};
 
 use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point};
 
-use typeset::element::{DocumentLayout, ElementId, Page, Position};
+use layout::element::content::LayoutElementContent;
+use layout::element::{DocumentLayout, ElementId, Page};
 use unit::{Distance, DistanceUnit};
 
 use crate::result::ExportResult;
@@ -70,14 +71,11 @@ fn draw_elements_on_layer(
 
     for element_id in elements {
         if let Some(element) = document_layout.element(element_id) {
-            let position = resolve_position(element.bounds().position(), document_layout);
+            let position = element.bounds().position();
             let font_size = Distance::new(12.0, DistanceUnit::Points); // TODO Get from typeset element style
 
             match element.content() {
-                typeset::element::TypesetElementContent::Group(content) => {
-                    draw_elements_on_layer(document, pdf_layer, document_layout, &content.elements);
-                }
-                typeset::element::TypesetElementContent::TextSlice(content) => {
+                LayoutElementContent::TextSlice(content) => {
                     pdf_layer.begin_text_section();
 
                     pdf_layer.set_font(&font, font_size.value(DistanceUnit::Points));
@@ -118,36 +116,4 @@ fn draw_elements_on_layer(
             };
         }
     }
-}
-
-fn resolve_position(position: &Position, document_layout: &DocumentLayout) -> Position {
-    if let Position::Absolute { x, y } = position {
-        return Position::absolute(*x, *y);
-    }
-
-    let mut total_x = Distance::zero();
-    let mut total_y = Distance::zero();
-    let mut current = position;
-    loop {
-        total_x += current.x();
-        total_y += current.y();
-
-        // TODO Cache already resolved positions for element IDs so that we do not have to loop a lot here
-        if let Position::Relative {
-            element_id,
-            x: _,
-            y: _,
-        } = current
-        {
-            current = document_layout
-                .element(element_id)
-                .expect("Expected the element to exist")
-                .bounds()
-                .position();
-        } else {
-            break;
-        }
-    }
-
-    Position::absolute(total_x, total_y)
 }

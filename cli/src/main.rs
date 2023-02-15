@@ -34,8 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         structure: document_structure,
     };
 
-    layout::layout(&document)?;
-    let document_layout = typeset::typeset(&document)?;
+    let document_layout = layout::layout(&document)?;
 
     export::export(document_layout, ExportType::PDF)?;
 

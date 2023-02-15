@@ -6,4 +6,13 @@ edition = "2021"
 [dependencies]
 unit = { path = "../unit" }
 document = { path = "../document" }
+typeset = { path = "../typeset" }
 log = "0.4.17"
+
+[dependencies.uuid]
+version = "1.3.0"
+features = [
+    "v4",
+    "fast-rng",
+    "macro-diagnostics"
+]
