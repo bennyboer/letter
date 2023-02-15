@@ -1,3 +1,5 @@
+use crate::element::LayoutConstraints;
+
 use super::ElementId;
 
 /// A representation of a page of a typeset document
@@ -5,15 +7,15 @@ use super::ElementId;
 #[derive(Debug)]
 pub struct Page {
     number: usize,
-    element: ElementId,
+    constraints: LayoutConstraints,
     elements: Vec<ElementId>,
 }
 
 impl Page {
-    pub fn new(number: usize, element: ElementId) -> Self {
+    pub fn new(number: usize, constraints: LayoutConstraints) -> Self {
         Self {
             number,
-            element,
+            constraints,
             elements: Vec::new(),
         }
     }
@@ -31,7 +33,7 @@ impl Page {
         &self.elements
     }
 
-    pub fn element(&self) -> ElementId {
-        self.element
+    pub fn constraints(&self) -> &LayoutConstraints {
+        &self.constraints
     }
 }

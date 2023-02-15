@@ -6,6 +6,7 @@ use simple_logger::SimpleLogger;
 use document::meta_data::DocumentMetaData;
 use document::Document;
 use export::ExportType;
+use layout::options::LayoutOptions;
 use script::parse_document_structure;
 
 const BANNER: &str = "\
@@ -34,7 +35,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         structure: document_structure,
     };
 
-    let document_layout = layout::layout(&document)?;
+    let layout_options = LayoutOptions::default();
+    let document_layout = layout::layout(&document, layout_options)?;
 
     export::export(document_layout, ExportType::PDF)?;
 
