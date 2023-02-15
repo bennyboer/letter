@@ -7,7 +7,7 @@ A possible element may be an individual character, an image, lines, ...
 ## Process
 
 Laying out a document is a complex task.
-To reduce its complexity, each element or node in a document structure will habe its own set of rules for laying out on a page, which is called a `LayoutRule`.
+To reduce its complexity, each element or node in a document structure will have its own set of rules for laying out on a page, which is called a `LayoutRule`.
 A `LayoutRule` is essentially a function that takes a `LayoutContext` and a node of the `Document` and returns a `LayoutResult`.
 The `LayoutContext` contains all the information and constraints needed to lay out the node, such as the current page, the current position, the available space, etc.
 Each `LayoutRule` will mutate that `LayoutContext` to reflect the changes made to the page.
@@ -22,7 +22,7 @@ The biggest problem with this layout approach is that some nodes in a document s
 For example a text paragraph that contains a forward reference - say a page number of a node that is not yet laid out.
 In this case the result of the documents layout will be flagged as `unstable` since it may change when the forward reference is resolved.
 When a document layout is flagged as `unstable` it will need to be entirely re-laid out in a second pass.
-In the second layout pass we already now the page number to render instead of the forward reference, so we can now calculate the exact size of the text paragraph and lay it out correctly.
+In the second layout pass we already know the page number to render instead of the forward reference, so we can now calculate the exact size of the text paragraph and lay it out correctly.
 That page number has not been known beforehand and thus the elements that habe been laid out afterwards may also need to be re-laid out since there may be less space available on the current page.
 That in turn may cause forward references to be invalidated again, which will cause another re-layout pass.
 Imagine that a page number of an element is now shifted from page 5 to page 6 due to the change in size of the one text paragraph that contains the forward reference.
