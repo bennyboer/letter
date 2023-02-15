@@ -44,7 +44,11 @@ fn layout_pass(
 ) -> LayoutResult<LayoutPassResult> {
     let ctx = LayoutContext::new();
 
-    // TODO Initialize first page in context with page size and margins from styles
+    // TODO Initialize initial layout constraints and styles to the context
+
+    // TODO Iterate over document nodes
+    // TODO Apply the nodes styles to the current context (e. g. push layout constraints, ...)
+    // TODO Layout node using their assigned `LayoutRule` (if they have one). For example a break node may simply modify the layout constraints or push another page (if it is a page break)
 
     Ok(LayoutPassResult {
         stable: true,
