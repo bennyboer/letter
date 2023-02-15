@@ -17,21 +17,8 @@ In LaTeX there is a macro for a chapter, a section, a subsection and a subsubsec
 In Letter there is only one element for a section which you may nest to any depth you want.
 Want a subsubsubsubsubsubsection? Why not.
 
-## Typesetting Process
+## Process
 
-- Parsing the input file (`*.lsc`)
-- Building the document structure (or tree)
-- Layouting the document (multiple passes if necessary to determine forward references for example)
-  - Visit each element in the document tree
-  - Ignore elements that are not visible and are just for defining the structure of the document (section, paragraph, etc.)
-  - Layout the visible elements locally using constraints in the current context (e.g. the current page and the available space)
-    - Text
-    - Images
-    - Tables
-    - Lists
-    - ...
-  - Adjust the current context - e. g. lower the available space by the height/width of the element
-  - When having a placeholder for a forward reference, replace it with the actual element (if known in the first pass)
-  - If not known, schedule another pass after the current one
-  - Schedule passes until the layout does not change anymore (or a maximum number of passes is reached)
-- Rendering the document (PDF, ...)
+- Parsing the input files (`*.lsc` for document structure and content, `*.lst` for styles, `*.lmd` for metadata and variables) to a document
+- Laying out the document (see [here](layout/README.md))
+- (optionally) Rendering the document (PDF, ...)
