@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
+use document::structure::DocumentNode;
 use document::Document;
+use unit::{Distance, DistanceUnit};
 
 use crate::context::LayoutContext;
-use crate::element::DocumentLayout;
+use crate::element::{DocumentLayout, LayoutConstraints, Size};
 use crate::options::LayoutOptions;
 use crate::result::LayoutResult;
 
@@ -16,7 +18,7 @@ pub fn layout(document: &Document, options: LayoutOptions) -> LayoutResult<Docum
     let mut pass_counter = 0;
     let mut last_pass_layout = None;
     loop {
-        let layout_pass_result = layout_pass(document, &last_pass_layout, &options)?;
+        let layout_pass_result = layout_pass(document, last_pass_layout, &options)?;
         if layout_pass_result.stable {
             return Ok(layout_pass_result.layout);
         }
@@ -39,21 +41,50 @@ pub fn layout(document: &Document, options: LayoutOptions) -> LayoutResult<Docum
 
 fn layout_pass(
     document: &Document,
-    last_pass_layout: &Option<DocumentLayout>,
-    options: &LayoutOptions,
+    last_pass_layout: Option<DocumentLayout>,
+    _options: &LayoutOptions,
 ) -> LayoutResult<LayoutPassResult> {
-    let ctx = LayoutContext::new();
+    let mut ctx = LayoutContext::new(last_pass_layout);
+    init_ctx(&mut ctx, document);
 
-    // TODO Initialize initial layout constraints and styles to the context
-
-    // TODO Iterate over document nodes
-    // TODO Apply the nodes styles to the current context (e. g. push layout constraints, ...)
-    // TODO Layout node using their assigned `LayoutRule` (if they have one). For example a break node may simply modify the layout constraints or push another page (if it is a page break)
+    process_node(&document.structure.root(), document, &mut ctx);
 
     Ok(LayoutPassResult {
         stable: true,
         layout: DocumentLayout::new(vec![], HashMap::new()),
     })
+}
+
+fn process_node(node: &DocumentNode, document: &Document, ctx: &mut LayoutContext) {
+    let structure = &document.structure;
+
+    println!("Processing node: {:?}", node);
+
+    // TODO Apply the nodes styles to the current context (e. g. push layout constraints, ...)
+    // TODO Layout node using their assigned `LayoutRule` (if they have one). For example a break node may simply modify the layout constraints or push another page (if it is a page break)
+
+    let node_ids = node.children();
+    for node_id in node_ids {
+        if let Some(node) = structure.get_node(*node_id) {
+            process_node(node, document, ctx);
+        }
+    }
+}
+
+fn init_ctx(ctx: &mut LayoutContext, _document: &Document) {
+    // TODO Read initial layout constraints from document styles
+    let initial_layout_constraints = LayoutConstraints::new(
+        Size::new(
+            Distance::new(210.0, DistanceUnit::Millimeter),
+            Distance::new(297.0, DistanceUnit::Millimeter),
+        ),
+        Distance::zero(),
+        Distance::zero(),
+        Distance::zero(),
+        Distance::zero(),
+    );
+
+    ctx.push_layout_constraints(initial_layout_constraints);
 }
 
 struct LayoutPassResult {

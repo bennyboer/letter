@@ -28,4 +28,8 @@ impl DocumentNode {
     pub fn add_child(&mut self, child: NodeId) {
         self.children.push(child);
     }
+
+    pub fn children(&self) -> &[NodeId] {
+        &self.children
+    }
 }

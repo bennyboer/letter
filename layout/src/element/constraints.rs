@@ -12,6 +12,22 @@ pub struct LayoutConstraints {
 }
 
 impl LayoutConstraints {
+    pub fn new(
+        size: Size,
+        top: Distance,
+        bottom: Distance,
+        left: Distance,
+        right: Distance,
+    ) -> Self {
+        Self {
+            size,
+            top,
+            bottom,
+            left,
+            right,
+        }
+    }
+
     pub fn size(&self) -> Size {
         self.size
     }
