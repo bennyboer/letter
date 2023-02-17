@@ -59,8 +59,6 @@ pub fn parse_document_structure(src: &str) -> ParseResult<DocumentStructure> {
         return Err("Unclosed tags found".into());
     }
 
-    println!("{}", context.document_structure.fmt_pretty());
-
     Ok(context.document_structure)
 }
 

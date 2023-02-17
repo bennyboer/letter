@@ -2,7 +2,7 @@ use unit::Distance;
 
 use crate::element::Size;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct LayoutConstraints {
     size: Size,
     top: Distance,

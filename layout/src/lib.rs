@@ -1,18 +1,17 @@
-use std::collections::HashMap;
-
-use document::structure::DocumentNode;
+use document::structure::{DocumentNode, DocumentNodeValue};
 use document::Document;
-use unit::{Distance, DistanceUnit};
 
 use crate::context::LayoutContext;
-use crate::element::{DocumentLayout, LayoutConstraints, Size};
+use crate::element::DocumentLayout;
 use crate::options::LayoutOptions;
 use crate::result::LayoutResult;
+use crate::rule::{DefaultLayoutRule, LayoutRule, RootLayoutRule, TextLayoutRule};
 
 mod context;
 pub mod element;
 pub mod options;
 pub mod result;
+mod rule;
 
 pub fn layout(document: &Document, options: LayoutOptions) -> LayoutResult<DocumentLayout> {
     let mut pass_counter = 0;
@@ -45,46 +44,49 @@ fn layout_pass(
     _options: &LayoutOptions,
 ) -> LayoutResult<LayoutPassResult> {
     let mut ctx = LayoutContext::new(last_pass_layout);
-    init_ctx(&mut ctx, document);
 
-    process_node(&document.structure.root(), document, &mut ctx);
+    process_node(&document.structure.root(), document, &mut ctx)?;
 
-    Ok(LayoutPassResult {
-        stable: true,
-        layout: DocumentLayout::new(vec![], HashMap::new()),
-    })
+    let stable = ctx.is_stable();
+    let layout = ctx.to_layout();
+
+    Ok(LayoutPassResult { stable, layout })
 }
 
-fn process_node(node: &DocumentNode, document: &Document, ctx: &mut LayoutContext) {
+fn process_node(
+    node: &DocumentNode,
+    document: &Document,
+    ctx: &mut LayoutContext,
+) -> LayoutResult<()> {
     let structure = &document.structure;
 
-    println!("Processing node: {:?}", node);
-
-    // TODO Apply the nodes styles to the current context (e. g. push layout constraints, ...)
-    // TODO Layout node using their assigned `LayoutRule` (if they have one). For example a break node may simply modify the layout constraints or push another page (if it is a page break)
+    layout_node_using_rule(node, document, ctx)?;
 
     let node_ids = node.children();
     for node_id in node_ids {
         if let Some(node) = structure.get_node(*node_id) {
-            process_node(node, document, ctx);
+            process_node(node, document, ctx)?;
         }
     }
+
+    Ok(())
 }
 
-fn init_ctx(ctx: &mut LayoutContext, _document: &Document) {
-    // TODO Read initial layout constraints from document styles
-    let initial_layout_constraints = LayoutConstraints::new(
-        Size::new(
-            Distance::new(210.0, DistanceUnit::Millimeter),
-            Distance::new(297.0, DistanceUnit::Millimeter),
-        ),
-        Distance::zero(),
-        Distance::zero(),
-        Distance::zero(),
-        Distance::zero(),
-    );
+fn layout_node_using_rule(
+    node: &DocumentNode,
+    document: &Document,
+    ctx: &mut LayoutContext,
+) -> LayoutResult<()> {
+    let rule = map_node_to_rule(node);
+    rule.layout(node, document, ctx)
+}
 
-    ctx.push_layout_constraints(initial_layout_constraints);
+fn map_node_to_rule(node: &DocumentNode) -> Box<dyn LayoutRule> {
+    match node.value {
+        DocumentNodeValue::DocumentRoot => Box::new(RootLayoutRule::new()),
+        DocumentNodeValue::Text(_) => Box::new(TextLayoutRule::new()),
+        _ => Box::new(DefaultLayoutRule::new()),
+    }
 }
 
 struct LayoutPassResult {

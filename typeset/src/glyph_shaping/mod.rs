@@ -3,14 +3,14 @@ use harfbuzz_rs::{shape, Face, Font, UnicodeBuffer};
 pub use glyph::GlyphDetails;
 use unit::{Distance, DistanceUnit};
 
-use crate::glyph_shaping::result::_TextShaperResult;
+use crate::glyph_shaping::result::TextShaperResult;
 use crate::result::TypesetResult;
 
 mod glyph;
 mod result;
 
 // TODO Extract shape_text to some kind of shaper-service that can be mocked in tests
-fn _shape_text(text: &str, font_size: Distance) -> TypesetResult<_TextShaperResult> {
+pub fn shape_text(text: &str, font_size: Distance) -> TypesetResult<TextShaperResult> {
     // TODO This will parse the font each invocation which is expensive -> Refactor to only create font and buffer once
 
     let font_path = "C:/repo/kerning/fonts/Adobe/TisaPro/TisaPro.otf";
@@ -60,5 +60,5 @@ fn _shape_text(text: &str, font_size: Distance) -> TypesetResult<_TextShaperResu
         glyphs.push(glyph_details);
     }
 
-    Ok(_TextShaperResult { width, glyphs })
+    Ok(TextShaperResult { width, glyphs })
 }
