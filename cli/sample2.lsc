@@ -26,6 +26,8 @@
     <section>
         <heading>Second level headline - big</heading>
 
+        <!-- <math src="equation_1.xml" format="MathML"></math> -->
+
         <paragraph>
             Again some text in a paragraph.
         </paragraph>
