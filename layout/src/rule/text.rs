@@ -92,8 +92,12 @@ fn layout_text(
         x_offset += text_part_width;
     }
 
-    let paragraph_spacing = Distance::new(8.0, DistanceUnit::Points); // TODO Make configurable
-    let new_origin = Position::relative_to(&origin, Distance::zero(), y_offset + paragraph_spacing);
+    let paragraph_spacing = Distance::new(6.0, DistanceUnit::Points); // TODO Make configurable
+    let new_origin = Position::relative_to(
+        &origin,
+        Distance::zero(),
+        y_offset + line_height + paragraph_spacing,
+    );
     ctx.set_offset(new_origin);
 
     Ok(())
