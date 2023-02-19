@@ -1,4 +1,4 @@
-use unit::Distance;
+use unit::{Distance, DistanceUnit};
 
 use crate::context::insets::Insets;
 use crate::element::Size;
@@ -8,6 +8,7 @@ pub(crate) struct LayoutStyle {
     size: Size,
     margin: Insets,
     padding: Insets,
+    font_size: Distance,
 }
 
 impl LayoutStyle {
@@ -16,6 +17,7 @@ impl LayoutStyle {
             size: Size::zero(),
             margin: Insets::zero(),
             padding: Insets::zero(),
+            font_size: Distance::new(12.0, DistanceUnit::Points),
         }
     }
 
@@ -31,6 +33,10 @@ impl LayoutStyle {
         &self.padding
     }
 
+    pub fn font_size(&self) -> &Distance {
+        &self.font_size
+    }
+
     pub fn set_size(&mut self, size: Size) {
         self.size = size;
     }
@@ -41,5 +47,9 @@ impl LayoutStyle {
 
     pub fn set_padding(&mut self, padding: Insets) {
         self.padding = padding;
+    }
+
+    pub fn set_font_size(&mut self, size: Distance) {
+        self.font_size = size;
     }
 }

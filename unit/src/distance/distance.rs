@@ -22,6 +22,13 @@ impl Distance {
         }
     }
 
+    pub fn max() -> Distance {
+        Distance {
+            value: f64::MAX,
+            unit: DistanceUnit::Millimeter,
+        }
+    }
+
     pub fn value(&self, unit: DistanceUnit) -> UnitValue {
         let is_in_correct_unit = self.unit == unit;
         if is_in_correct_unit {

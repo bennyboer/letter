@@ -62,4 +62,16 @@ impl DocumentStyles {
 pub enum Style {
     Width(Distance),
     Height(Distance),
+
+    MarginTop(Distance),
+    MarginRight(Distance),
+    MarginBottom(Distance),
+    MarginLeft(Distance),
+
+    PaddingTop(Distance),
+    PaddingRight(Distance),
+    PaddingBottom(Distance),
+    PaddingLeft(Distance),
+
+    FontSize(Distance),
 }

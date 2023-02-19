@@ -5,11 +5,11 @@ use document::style::{NodeName, Style};
 use document::Document;
 use unit::{Distance, DistanceUnit};
 
-use crate::context::{LayoutContext, LayoutStyle, OneSizeFitsAllPageSizing, PageSizing};
+use crate::context::{Insets, LayoutContext, LayoutStyle, OneSizeFitsAllPageSizing, PageSizing};
 use crate::element::{DocumentLayout, LayoutConstraints, Size};
 use crate::options::LayoutOptions;
 use crate::result::LayoutResult;
-use crate::rule::{LayoutRule, RootLayoutRule, TextLayoutRule};
+use crate::rule::{LayoutRule, TextLayoutRule};
 
 mod context;
 pub mod element;
@@ -113,13 +113,34 @@ fn pop_node_styles(
 fn apply_to_layout_style(layout_style: &LayoutStyle, styles: &Vec<&Style>) -> LayoutStyle {
     let mut result = layout_style.clone();
 
+    // Size, margin and padding are not inherited
+    result.set_size(Size::max());
+    result.set_margin(Insets::zero());
+    result.set_padding(Insets::zero());
+
     for style in styles {
         match style {
-            Style::Width(distance) => {
-                println!("Setting width to {:?}", distance);
-                result.set_size(result.size().with_width(*distance))
-            }
+            Style::Width(distance) => result.set_size(result.size().with_width(*distance)),
             Style::Height(distance) => result.set_size(result.size().with_height(*distance)),
+            Style::MarginTop(distance) => result.set_margin(result.margin().with_top(*distance)),
+            Style::MarginRight(distance) => {
+                result.set_margin(result.margin().with_right(*distance))
+            }
+            Style::MarginBottom(distance) => {
+                result.set_margin(result.margin().with_bottom(*distance))
+            }
+            Style::MarginLeft(distance) => result.set_margin(result.margin().with_left(*distance)),
+            Style::PaddingTop(distance) => result.set_padding(result.padding().with_top(*distance)),
+            Style::PaddingRight(distance) => {
+                result.set_padding(result.padding().with_right(*distance))
+            }
+            Style::PaddingBottom(distance) => {
+                result.set_padding(result.padding().with_bottom(*distance))
+            }
+            Style::PaddingLeft(distance) => {
+                result.set_padding(result.padding().with_left(*distance))
+            }
+            Style::FontSize(distance) => result.set_font_size(*distance),
         };
     }
 
@@ -141,7 +162,6 @@ fn layout_node_using_rule(
 
 fn map_node_to_rule(node: &DocumentNode) -> Option<Box<dyn LayoutRule>> {
     match node.value {
-        DocumentNodeValue::DocumentRoot => Some(Box::new(RootLayoutRule::new())),
         DocumentNodeValue::Text(_) => Some(Box::new(TextLayoutRule::new())),
         _ => None,
     }

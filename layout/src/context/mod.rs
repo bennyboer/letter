@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
+pub(crate) use crate::context::insets::Insets;
 pub(crate) use crate::context::page_sizing::{OneSizeFitsAllPageSizing, PageSizing};
 pub(crate) use crate::context::style::LayoutStyle;
-use crate::element::{DocumentLayout, ElementId, LayoutConstraints, LayoutElement, Page, Position};
+use crate::element::{
+    Bounds, DocumentLayout, ElementId, LayoutConstraints, LayoutElement, Page, Position,
+};
 
 mod insets;
 mod page_sizing;
@@ -21,8 +24,10 @@ pub(crate) struct LayoutContext {
     /// is finished being processed.
     style_stack: Vec<LayoutStyle>,
 
-    /// Current offset on the page.
-    offset: Position,
+    /// Current bounds in which to layout elements.
+    /// This will be modified by each `LayoutRule` to reduce the available space.
+    /// Margin and padding are already subtracted from the bounds.
+    bounds: Bounds,
 
     /// Ordered pages currently being laid out.
     pages: Vec<Page>,
@@ -33,14 +38,18 @@ pub(crate) struct LayoutContext {
 
 impl LayoutContext {
     pub fn new(last_pass_layout: Option<DocumentLayout>, page_sizing: Box<dyn PageSizing>) -> Self {
-        Self {
+        let mut result = Self {
             _last_pass_layout: last_pass_layout,
             page_sizing,
             style_stack: Vec::new(),
-            offset: Position::zero(),
+            bounds: Bounds::empty(),
             pages: Vec::new(),
             element_lookup: HashMap::new(),
-        }
+        };
+        
+        result.push_page();
+        
+        result
     }
 
     pub(crate) fn to_layout(self) -> DocumentLayout {
@@ -52,11 +61,15 @@ impl LayoutContext {
     }
 
     pub(crate) fn push_style(&mut self, style: LayoutStyle) {
+        self.apply_style_to_bounds(&style);
         self.style_stack.push(style);
     }
 
     pub(crate) fn pop_style(&mut self) {
-        self.style_stack.pop();
+        let style = self.style_stack.pop();
+        if let Some(style) = style {
+            self.remove_style_from_bounds(&style);
+        }
     }
 
     pub(crate) fn current_style(&mut self) -> &LayoutStyle {
@@ -73,6 +86,8 @@ impl LayoutContext {
         let page = Page::new(page_number, page_constraints);
 
         self.pages.push(page);
+
+        self.reset_bounds();
     }
 
     pub(crate) fn register_element(&mut self, element: LayoutElement) {
@@ -80,22 +95,23 @@ impl LayoutContext {
         self.element_lookup.insert(element.id(), element);
     }
 
-    pub(crate) fn offset(&self) -> Position {
-        self.offset
+    pub(crate) fn bounds(&self) -> Bounds {
+        self.bounds
     }
 
-    pub(crate) fn set_offset(&mut self, offset: Position) {
-        self.offset = offset;
+    pub(crate) fn set_bounds(&mut self, bounds: Bounds) {
+        self.bounds = bounds;
     }
 
     /// Modify the current context to break out of the current constraints.
     /// This is used when a layout element is too large to fit on the current page (or more
     /// specifically, the current layout constraints).
     /// This may push a new page if there is not enough space on the current page.
-    pub(crate) fn _break_out_of_constraints(&mut self) {
+    pub(crate) fn choose_next_bounds(&mut self) -> Bounds {
         // TODO Implement LayoutConstraintsRule to determine what to do when we break out of constraints
         // TODO Currently we simply push a new page, but we could also have a multi-column layout where we simply break to the next column (set in styles with the `layout` property)
-        todo!()
+        self.push_page();
+        self.bounds
     }
 
     fn current_page(&mut self) -> &mut Page {
@@ -104,5 +120,79 @@ impl LayoutContext {
 
     fn get_page_constraints(&self, page_number: usize) -> LayoutConstraints {
         self.page_sizing.get_page_constraints(page_number)
+    }
+
+    fn apply_style_to_bounds(&mut self, style: &LayoutStyle) {
+        let margin = style.margin();
+        let margin_top = margin.top();
+        let margin_left = margin.left();
+        let margin_right = margin.right();
+        let margin_bottom = margin.bottom();
+
+        let padding = style.padding();
+        let padding_top = padding.top();
+        let padding_left = padding.left();
+        let padding_right = padding.right();
+        let padding_bottom = padding.bottom();
+
+        let current_size = self.bounds.size();
+
+        let new_origin = Position::relative_to(
+            self.bounds.position(),
+            margin_left + padding_left,
+            margin_top + padding_top,
+        );
+        let new_size = self
+            .bounds
+            .size()
+            .with_width(
+                current_size.width - margin_left - margin_right - padding_left - padding_right,
+            )
+            .with_height(
+                current_size.height - margin_top - margin_bottom - padding_top - padding_bottom,
+            );
+        self.bounds = Bounds::new(new_origin, new_size);
+
+        if self.bounds.size().is_negative() {
+            self.choose_next_bounds();
+        }
+    }
+
+    fn remove_style_from_bounds(&mut self, style: &LayoutStyle) {
+        let margin = style.margin();
+        let margin_left = margin.left();
+        let margin_right = margin.right();
+        let margin_bottom = margin.bottom();
+
+        let padding = style.padding();
+        let padding_left = padding.left();
+        let padding_right = padding.right();
+        let padding_bottom = padding.bottom();
+
+        let current_size = self.bounds.size();
+
+        let new_origin = Position::relative_to(
+            self.bounds.position(),
+            -(margin_left + padding_left),
+            margin_bottom + padding_bottom,
+        );
+        let new_size = self
+            .bounds
+            .size()
+            .with_width(
+                current_size.width + margin_left + margin_right + padding_left + padding_right,
+            )
+            .with_height(current_size.height - margin_bottom - padding_bottom);
+        self.bounds = Bounds::new(new_origin, new_size);
+    }
+
+    fn reset_bounds(&mut self) {
+        let page_constraints = self.current_page().constraints();
+        self.bounds = Bounds::new(Position::zero(), page_constraints.size());
+
+        let styles = self.style_stack.clone();
+        for style in styles {
+            self.apply_style_to_bounds(&style);
+        }
     }
 }

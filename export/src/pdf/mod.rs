@@ -105,10 +105,11 @@ fn draw_elements_on_layer(
     for element_id in page.elements() {
         if let Some(element) = document_layout.element(element_id) {
             let position = element.bounds().position();
-            let font_size = Distance::new(12.0, DistanceUnit::Points); // TODO Get from typeset element style
 
             match element.content() {
                 LayoutElementContent::TextSlice(content) => {
+                    let font_size = content.font_size;
+
                     pdf_layer.begin_text_section();
 
                     pdf_layer.set_font(&font, font_size.value(DistanceUnit::Points));

@@ -109,6 +109,9 @@ fn parse_styles_from_value(
 ) -> StyleParseResult<()> {
     match key {
         "size" => parse_size_styles(parse_unnamed_block_to_map(pairs)?, result)?,
+        "margin" => parse_margin_styles(parse_unnamed_block_to_map(pairs)?, result)?,
+        "padding" => parse_padding_styles(parse_unnamed_block_to_map(pairs)?, result)?,
+        "font" => parse_font_styles(parse_unnamed_block_to_map(pairs)?, result)?,
         _ => Err(format!("Property with key '{}' is currently not supported", key).to_owned())?,
     }
 
@@ -160,6 +163,72 @@ fn parse_size_styles(
     if properties.contains_key("height") {
         let distance = parse_distance_property(&properties, "height")?;
         result.push(Style::Height(distance));
+    }
+
+    Ok(())
+}
+
+fn parse_margin_styles(
+    properties: HashMap<String, String>,
+    result: &mut Vec<Style>,
+) -> StyleParseResult<()> {
+    if properties.contains_key("top") {
+        let distance = parse_distance_property(&properties, "top")?;
+        result.push(Style::MarginTop(distance));
+    }
+
+    if properties.contains_key("left") {
+        let distance = parse_distance_property(&properties, "left")?;
+        result.push(Style::MarginLeft(distance));
+    }
+
+    if properties.contains_key("bottom") {
+        let distance = parse_distance_property(&properties, "bottom")?;
+        result.push(Style::MarginBottom(distance));
+    }
+
+    if properties.contains_key("right") {
+        let distance = parse_distance_property(&properties, "right")?;
+        result.push(Style::MarginRight(distance));
+    }
+
+    Ok(())
+}
+
+fn parse_padding_styles(
+    properties: HashMap<String, String>,
+    result: &mut Vec<Style>,
+) -> StyleParseResult<()> {
+    if properties.contains_key("top") {
+        let distance = parse_distance_property(&properties, "top")?;
+        result.push(Style::PaddingTop(distance));
+    }
+
+    if properties.contains_key("left") {
+        let distance = parse_distance_property(&properties, "left")?;
+        result.push(Style::PaddingLeft(distance));
+    }
+
+    if properties.contains_key("bottom") {
+        let distance = parse_distance_property(&properties, "bottom")?;
+        result.push(Style::PaddingBottom(distance));
+    }
+
+    if properties.contains_key("right") {
+        let distance = parse_distance_property(&properties, "right")?;
+        result.push(Style::PaddingRight(distance));
+    }
+
+    Ok(())
+}
+
+fn parse_font_styles(
+    properties: HashMap<String, String>,
+    result: &mut Vec<Style>,
+) -> StyleParseResult<()> {
+    if properties.contains_key("size") {
+        let distance = parse_distance_property(&properties, "size")?;
+        result.push(Style::FontSize(distance));
     }
 
     Ok(())

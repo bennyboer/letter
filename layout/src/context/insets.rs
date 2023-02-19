@@ -1,6 +1,6 @@
 use unit::Distance;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Insets {
     top: Distance,
     right: Distance,

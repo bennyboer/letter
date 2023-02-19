@@ -1,7 +1,7 @@
 use document::structure::{DocumentNode, DocumentNodeValue};
 use document::Document;
 use typeset::glyph_shaping::shape_text;
-use unit::{Distance, DistanceUnit};
+use unit::Distance;
 
 use crate::context::LayoutContext;
 use crate::element::content::{LayoutElementContent, TextSliceContent};
@@ -38,19 +38,29 @@ fn layout_text(
     _document: &Document,
     ctx: &mut LayoutContext,
 ) -> LayoutResult<()> {
-    let origin = ctx.offset();
+    let mut bounds = ctx.bounds();
     let style = ctx.current_style();
     let size = style.size();
 
     // Using the trivial line breaking algorithm to typeset the text (to be replaced by a better alternative)
     // TODO: Use the Knuth-Plass Algorithm to typeset the text block -> Convert to Box-Glue-Model first
-    let line_width = size.width; // TODO Get the line width per line separately - configurable!
-    let font_size = Distance::new(12.0, DistanceUnit::Points); // TODO Make configurable
+    // TODO Get the line width per line separately - configurable!
+    let line_width = if size.width < bounds.size().width {
+        size.width
+    } else {
+        bounds.size().width
+    };
+
+    let font_size = *style.font_size(); // TODO Make configurable
     let line_height = font_size * 1.2; // TODO Make configurable
     let white_space_width: Distance = shape_text(" ", font_size)?.width; // TODO Can probably be removed when using the Knuth-Plass algorithm
 
     let mut y_offset = Distance::zero();
     let mut x_offset = Distance::zero();
+
+    if line_height > bounds.size().height {
+        bounds = ctx.choose_next_bounds();
+    }
 
     // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
     for text_part in text.split_whitespace() {
@@ -65,16 +75,23 @@ fn layout_text(
 
         let break_line = x_offset + text_part_width > line_width;
         if break_line {
-            y_offset += line_height;
+            if y_offset + line_height > bounds.size().height {
+                bounds = ctx.choose_next_bounds();
+                y_offset = Distance::zero();
+            } else {
+                y_offset += line_height;
+            }
+
             x_offset = Distance::zero();
         }
 
         let element = {
-            let position = Position::relative_to(&origin, x_offset, y_offset);
+            let position = Position::relative_to(&bounds.position(), x_offset, y_offset);
             let size = Size::new(text_part_width, line_height);
             let bounds = Bounds::new(position, size);
 
             let content = LayoutElementContent::TextSlice(TextSliceContent {
+                font_size,
                 glyphs: shaped_text_part.glyphs,
             });
 
@@ -85,8 +102,12 @@ fn layout_text(
         x_offset += text_part_width;
     }
 
-    let new_origin = Position::relative_to(&origin, Distance::zero(), y_offset + line_height);
-    ctx.set_offset(new_origin);
+    let total_height = y_offset + line_height;
+    let new_bounds_position =
+        Position::relative_to(&bounds.position(), Distance::zero(), total_height);
+    let new_height = bounds.size().height - total_height;
+    let new_bounds = Bounds::new(new_bounds_position, bounds.size().with_height(new_height));
+    ctx.set_bounds(new_bounds);
 
     Ok(())
 }

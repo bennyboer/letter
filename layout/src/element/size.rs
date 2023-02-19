@@ -14,21 +14,32 @@ impl Size {
         }
     }
 
+    pub fn max() -> Size {
+        Self {
+            width: Distance::max(),
+            height: Distance::max(),
+        }
+    }
+
     pub fn new(width: Distance, height: Distance) -> Self {
         Self { width, height }
     }
 
-    pub(crate) fn with_width(&self, distance: Distance) -> Size {
+    pub fn with_width(&self, distance: Distance) -> Size {
         Size {
             width: distance,
             ..*self
         }
     }
-    
-    pub(crate) fn with_height(&self, distance: Distance) -> Size {
+
+    pub fn with_height(&self, distance: Distance) -> Size {
         Size {
             height: distance,
             ..*self
         }
+    }
+
+    pub fn is_negative(&self) -> bool {
+        self.width < Distance::zero() || self.height < Distance::zero()
     }
 }
