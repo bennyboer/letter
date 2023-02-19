@@ -60,7 +60,11 @@ fn process_node(
 ) -> LayoutResult<()> {
     let structure = &document.structure;
 
-    layout_node_using_rule(node, document, ctx)?;
+    push_node_styles(node, document, ctx)?;
+    {
+        layout_node_using_rule(node, document, ctx)?;
+    }
+    pop_node_styles(node, document, ctx)?;
 
     let node_ids = node.children();
     for node_id in node_ids {
@@ -68,6 +72,27 @@ fn process_node(
             process_node(node, document, ctx)?;
         }
     }
+
+    Ok(())
+}
+
+fn push_node_styles(
+    node: &DocumentNode,
+    document: &Document,
+    ctx: &mut LayoutContext,
+) -> LayoutResult<()> {
+    // TODO Remove constraints stack in context and replace by a field `style_stack: Vec<NodeStyles>`
+    // TODO Push node styles to context (Push to `style_stack`)
+
+    Ok(())
+}
+
+fn pop_node_styles(
+    _node: &DocumentNode,
+    _ctx: &Document,
+    ctx: &mut LayoutContext,
+) -> LayoutResult<()> {
+    // TODO Pop node styles from context (Pop from `style_stack`)
 
     Ok(())
 }
