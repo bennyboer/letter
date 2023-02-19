@@ -1,11 +1,15 @@
-use document::structure::{DocumentNode, DocumentNodeValue};
-use document::Document;
+extern crate core;
 
-use crate::context::LayoutContext;
-use crate::element::DocumentLayout;
+use document::structure::{DocumentNode, DocumentNodeValue};
+use document::style::{NodeName, Style};
+use document::Document;
+use unit::{Distance, DistanceUnit};
+
+use crate::context::{LayoutContext, LayoutStyle, OneSizeFitsAllPageSizing, PageSizing};
+use crate::element::{DocumentLayout, LayoutConstraints, Size};
 use crate::options::LayoutOptions;
 use crate::result::LayoutResult;
-use crate::rule::{DefaultLayoutRule, LayoutRule, RootLayoutRule, TextLayoutRule};
+use crate::rule::{LayoutRule, RootLayoutRule, TextLayoutRule};
 
 mod context;
 pub mod element;
@@ -43,7 +47,8 @@ fn layout_pass(
     last_pass_layout: Option<DocumentLayout>,
     _options: &LayoutOptions,
 ) -> LayoutResult<LayoutPassResult> {
-    let mut ctx = LayoutContext::new(last_pass_layout);
+    let page_sizing = create_page_sizing_behavior(document);
+    let mut ctx = LayoutContext::new(last_pass_layout, page_sizing);
 
     process_node(&document.structure.root(), document, &mut ctx)?;
 
@@ -63,15 +68,15 @@ fn process_node(
     push_node_styles(node, document, ctx)?;
     {
         layout_node_using_rule(node, document, ctx)?;
-    }
-    pop_node_styles(node, document, ctx)?;
 
-    let node_ids = node.children();
-    for node_id in node_ids {
-        if let Some(node) = structure.get_node(*node_id) {
-            process_node(node, document, ctx)?;
+        let node_ids = node.children();
+        for node_id in node_ids {
+            if let Some(node) = structure.get_node(*node_id) {
+                process_node(node, document, ctx)?;
+            }
         }
     }
+    pop_node_styles(node, document, ctx)?;
 
     Ok(())
 }
@@ -81,20 +86,44 @@ fn push_node_styles(
     document: &Document,
     ctx: &mut LayoutContext,
 ) -> LayoutResult<()> {
-    // TODO Remove constraints stack in context and replace by a field `style_stack: Vec<NodeStyles>`
-    // TODO Push node styles to context (Push to `style_stack`)
+    let node_name: Option<NodeName> = node.name().map(|name| name.into());
+    if let Some(node_name) = node_name {
+        let class_name = None; // TODO Get class name from node
+        let styles = document.styles.resolve(&node_name, class_name);
+        let layout_style = apply_to_layout_style(ctx.current_style(), &styles);
+
+        ctx.push_style(layout_style);
+    }
 
     Ok(())
 }
 
 fn pop_node_styles(
-    _node: &DocumentNode,
+    node: &DocumentNode,
     _ctx: &Document,
     ctx: &mut LayoutContext,
 ) -> LayoutResult<()> {
-    // TODO Pop node styles from context (Pop from `style_stack`)
+    if node.name().is_some() {
+        ctx.pop_style();
+    }
 
     Ok(())
+}
+
+fn apply_to_layout_style(layout_style: &LayoutStyle, styles: &Vec<&Style>) -> LayoutStyle {
+    let mut result = layout_style.clone();
+
+    for style in styles {
+        match style {
+            Style::Width(distance) => {
+                println!("Setting width to {:?}", distance);
+                result.set_size(result.size().with_width(*distance))
+            }
+            Style::Height(distance) => result.set_size(result.size().with_height(*distance)),
+        };
+    }
+
+    result
 }
 
 fn layout_node_using_rule(
@@ -103,15 +132,50 @@ fn layout_node_using_rule(
     ctx: &mut LayoutContext,
 ) -> LayoutResult<()> {
     let rule = map_node_to_rule(node);
-    rule.layout(node, document, ctx)
+    if let Some(rule) = rule {
+        rule.layout(node, document, ctx)?;
+    }
+
+    Ok(())
 }
 
-fn map_node_to_rule(node: &DocumentNode) -> Box<dyn LayoutRule> {
+fn map_node_to_rule(node: &DocumentNode) -> Option<Box<dyn LayoutRule>> {
     match node.value {
-        DocumentNodeValue::DocumentRoot => Box::new(RootLayoutRule::new()),
-        DocumentNodeValue::Text(_) => Box::new(TextLayoutRule::new()),
-        _ => Box::new(DefaultLayoutRule::new()),
+        DocumentNodeValue::DocumentRoot => Some(Box::new(RootLayoutRule::new())),
+        DocumentNodeValue::Text(_) => Some(Box::new(TextLayoutRule::new())),
+        _ => None,
     }
+}
+
+fn create_page_sizing_behavior(document: &Document) -> Box<dyn PageSizing> {
+    // TODO Replace `get_root_layout_constraints` by really checking for page sizing rules in the style sheet
+    // TODO for now we just check the size defined on the root (document) style
+    let layout_constraints = get_root_layout_constraints(document);
+
+    Box::new(OneSizeFitsAllPageSizing::new(layout_constraints))
+}
+
+fn get_root_layout_constraints(document: &Document) -> LayoutConstraints {
+    let document_styles = &document.styles;
+    let styles = document_styles.resolve(&"document".into(), None);
+    let mut width = Distance::new(210.0, DistanceUnit::Millimeter);
+    let mut height = Distance::new(297.0, DistanceUnit::Millimeter);
+
+    let margin_top = Distance::zero();
+    let margin_right = Distance::zero();
+    let margin_bottom = Distance::zero();
+    let margin_left = Distance::zero();
+
+    for style in styles {
+        match style {
+            Style::Width(distance) => width = *distance,
+            Style::Height(distance) => height = *distance,
+            _ => {}
+        }
+    }
+
+    let size = Size::new(width, height);
+    LayoutConstraints::new(size, margin_top, margin_right, margin_bottom, margin_left)
 }
 
 struct LayoutPassResult {

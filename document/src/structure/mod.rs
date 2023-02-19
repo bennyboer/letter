@@ -22,7 +22,12 @@ pub struct DocumentStructure {
 impl DocumentStructure {
     pub fn new() -> Self {
         let root_node_id = 0;
-        let root_node = DocumentNode::new(root_node_id, DocumentNodeValue::DocumentRoot, None);
+        let root_node = DocumentNode::new(
+            root_node_id,
+            Some("document".to_owned()),
+            DocumentNodeValue::DocumentRoot,
+            None,
+        );
 
         let mut nodes = HashMap::new();
         nodes.insert(root_node_id, root_node);

@@ -14,6 +14,8 @@ mod id;
 mod node;
 mod resolver;
 
+const ROOT_NODE_NAME: &'static str = "document";
+
 pub struct DocumentStyles {
     styles: HashMap<StyleId, StyleDefinition>,
     resolver: StyleResolver,
@@ -27,6 +29,10 @@ impl DocumentStyles {
             resolver: StyleResolver::new(),
             style_id_counter: 0,
         }
+    }
+
+    pub fn root_style(&self) -> Vec<&Style> {
+        self.resolve(&ROOT_NODE_NAME.into(), None)
     }
 
     pub fn resolve(&self, node_name: &NodeName, class_name: Option<&ClassName>) -> Vec<&Style> {

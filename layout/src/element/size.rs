@@ -17,4 +17,18 @@ impl Size {
     pub fn new(width: Distance, height: Distance) -> Self {
         Self { width, height }
     }
+
+    pub(crate) fn with_width(&self, distance: Distance) -> Size {
+        Size {
+            width: distance,
+            ..*self
+        }
+    }
+    
+    pub(crate) fn with_height(&self, distance: Distance) -> Size {
+        Size {
+            height: distance,
+            ..*self
+        }
+    }
 }

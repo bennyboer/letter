@@ -161,6 +161,7 @@ fn to_node(
 
     Ok(DocumentNode::new(
         node_id,
+        Some(name.to_owned()),
         node_value,
         Some(source_position),
     ))
@@ -173,6 +174,7 @@ fn to_text_node(text: String, offset: usize, context: &mut ParseContext) -> Docu
 
     DocumentNode::new(
         node_id,
+        None,
         DocumentNodeValue::Text(text),
         Some(source_position),
     )

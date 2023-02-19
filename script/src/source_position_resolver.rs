@@ -151,7 +151,6 @@ consectetur adipiscing elit.";
 
         // And: The source position should be line 1, column 1
         let pos = pos.unwrap();
-        println!("{:?}", pos);
         assert_eq!(pos.line, 1);
         assert_eq!(pos.column, 1);
     }
@@ -211,7 +210,6 @@ adipiscing elit.";
 
         // And: The source position should be line 3, column 3
         let pos = pos.unwrap();
-        println!("{:?}", pos);
         assert_eq!(pos.line, 3);
         assert_eq!(pos.column, 3);
     }
