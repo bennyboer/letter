@@ -63,4 +63,16 @@ impl DistanceUnit {
             } => "FUnits",
         }
     }
+
+    pub fn from_shortform(shortform: &str) -> Option<Self> {
+        match shortform {
+            "mm" => Some(DistanceUnit::Millimeter),
+            "cm" => Some(DistanceUnit::Centimeter),
+            "dm" => Some(DistanceUnit::Decimeter),
+            "m" => Some(DistanceUnit::Meter),
+            "in" => Some(DistanceUnit::Inch),
+            "pt" => Some(DistanceUnit::Points),
+            _ => None,
+        }
+    }
 }

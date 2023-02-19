@@ -3,14 +3,29 @@ use std::{fs::File, io::BufWriter};
 use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point};
 
 use layout::element::content::LayoutElementContent;
-use layout::element::{DocumentLayout, ElementId, Page};
+use layout::element::{DocumentLayout, Page};
 use unit::{Distance, DistanceUnit};
 
 use crate::result::ExportResult;
 
 pub(crate) fn export_as_pdf(document_layout: DocumentLayout) -> ExportResult<()> {
-    let (document, page_index, layer_index) =
-        PdfDocument::new("Letter test output", Mm(210.0), Mm(297.0), "Layer 1");
+    let layout_constraints = document_layout.pages().first().unwrap().constraints();
+
+    let initial_page_width = Mm(layout_constraints
+        .size()
+        .width
+        .value(DistanceUnit::Millimeter));
+    let initial_page_height = Mm(layout_constraints
+        .size()
+        .height
+        .value(DistanceUnit::Millimeter));
+
+    let (document, page_index, layer_index) = PdfDocument::new(
+        "Letter test output",
+        initial_page_width,
+        initial_page_height,
+        "Layer 1",
+    );
     let mut is_first_page = true;
     let mut pdf_page = document.get_page(page_index);
     let mut pdf_layer = pdf_page.get_layer(layer_index);
@@ -18,8 +33,8 @@ pub(crate) fn export_as_pdf(document_layout: DocumentLayout) -> ExportResult<()>
     for page in document_layout.pages() {
         if !is_first_page {
             let (page_index, layer_index) = document.add_page(
-                Mm(210.0),
-                Mm(297.0),
+                initial_page_width,
+                initial_page_height,
                 format!("Page {}, Layer 1", page.number()),
             );
             pdf_page = document.get_page(page_index);
@@ -27,7 +42,7 @@ pub(crate) fn export_as_pdf(document_layout: DocumentLayout) -> ExportResult<()>
         }
 
         draw_page_content_outline(&pdf_layer, page);
-        draw_elements_on_layer(&document, &pdf_layer, &document_layout, page.elements());
+        draw_elements_on_layer(&document, &pdf_layer, &document_layout, page);
 
         is_first_page = false;
     }
@@ -39,14 +54,26 @@ pub(crate) fn export_as_pdf(document_layout: DocumentLayout) -> ExportResult<()>
     Ok(())
 }
 
-fn draw_page_content_outline(pdf_layer: &printpdf::PdfLayerReference, _page: &Page) {
-    // TODO Get outline coordinates from page
+fn draw_page_content_outline(pdf_layer: &printpdf::PdfLayerReference, page: &Page) {
+    let layout_constraints = page.constraints();
+    let page_width = layout_constraints
+        .size()
+        .width
+        .value(DistanceUnit::Millimeter);
+    let page_height = layout_constraints
+        .size()
+        .height
+        .value(DistanceUnit::Millimeter);
+
     pdf_layer.set_outline_color(Color::Greyscale(Greyscale::new(0.9, None)));
     let page_content_bounds_line_points = vec![
         (Point::new(Mm(20.0), Mm(20.0)), false),
-        (Point::new(Mm(20.0), Mm(277.0)), false),
-        (Point::new(Mm(190.0), Mm(277.0)), false),
-        (Point::new(Mm(190.0), Mm(20.0)), false),
+        (Point::new(Mm(20.0), Mm(page_height - 20.0)), false),
+        (
+            Point::new(Mm(page_width - 20.0), Mm(page_height - 20.0)),
+            false,
+        ),
+        (Point::new(Mm(page_width - 20.), Mm(20.0)), false),
     ];
     let page_content_bounds_line = Line {
         points: page_content_bounds_line_points,
@@ -62,14 +89,20 @@ fn draw_elements_on_layer(
     document: &printpdf::PdfDocumentReference, // TODO Probably dont need to pass the document when the fonts are loaded using some kind of font manager
     pdf_layer: &printpdf::PdfLayerReference,
     document_layout: &DocumentLayout,
-    elements: &[ElementId],
+    page: &Page,
 ) {
+    let layout_constraints = page.constraints();
+    let page_height = layout_constraints
+        .size()
+        .height
+        .value(DistanceUnit::Millimeter);
+
     // TODO Loading the font everytime is expensive -> need some kind of font cache to only load a font once
     let font = document
         .add_external_font(File::open("C:/Windows/Fonts/TisaPro.otf").unwrap())
         .unwrap();
 
-    for element_id in elements {
+    for element_id in page.elements() {
         if let Some(element) = document_layout.element(element_id) {
             let position = element.bounds().position();
             let font_size = Distance::new(12.0, DistanceUnit::Points); // TODO Get from typeset element style
@@ -81,7 +114,8 @@ fn draw_elements_on_layer(
                     pdf_layer.set_font(&font, font_size.value(DistanceUnit::Points));
                     pdf_layer.set_text_cursor(
                         Mm(position.x().value(DistanceUnit::Millimeter)),
-                        Mm(297.0 - (position.y() + font_size).value(DistanceUnit::Millimeter)),
+                        Mm(page_height
+                            - (position.y() + font_size).value(DistanceUnit::Millimeter)),
                     );
 
                     // TODO Find "normal" codepoint width for each glyph for the current font

@@ -1,0 +1,22 @@
+Stylesheet = { SOI ~ Block* ~ EOI }
+
+Block = { Selector ~ UnnamedBlock }
+UnnamedBlock = { "{" ~ ( KeyValuePair )* ~ "}" }
+
+Selector = { Selectable ~ ( "," ~ Selectable )* }
+Selectable = { NodeName ~ ClassName? }
+NodeName = { ALPHABETIC+ }
+ClassName = { "." ~ ALPHABETIC+ }
+
+KeyValuePair = { Key ~ ":" ~ Value }
+Key = { ALPHABETIC+ }
+Value = { SimpleValue | UnnamedBlock }
+
+SimpleValue = { ( TextCharacter | NumberCharacter | RoundBrackets )+ ~ ";" }
+TextCharacter = { ALPHABETIC | QuotationMarks }
+QuotationMarks = { "\"" | "'" }
+NumberCharacter = { ASCII_DIGIT | "." | "-" | "+" }
+RoundBrackets = { "(" | ")" }
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }

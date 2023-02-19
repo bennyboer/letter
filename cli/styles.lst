@@ -1,0 +1,6 @@
+document {
+  size: {
+    width: 12cm;
+    height: 10cm;
+  }
+}

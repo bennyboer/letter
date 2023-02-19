@@ -1,14 +1,14 @@
-mod cmyk;
-mod hex;
-mod rgb;
-mod rgba;
-
 use core::fmt::{Debug, Display};
 
 pub use cmyk::CMYKColor;
 pub use hex::HexColor;
 pub use rgb::RGBColor;
 pub use rgba::RGBAColor;
+
+mod cmyk;
+mod hex;
+mod rgb;
+mod rgba;
 
 pub trait Color: Display {
     fn as_rgb(self) -> RGBColor;
@@ -27,5 +27,5 @@ impl Debug for dyn Color {
 pub struct Colors;
 
 impl Colors {
-    pub const BLACK: HexColor = HexColor::new(0x000000FF);
+    pub const _BLACK: HexColor = HexColor::new(0x000000FF);
 }
