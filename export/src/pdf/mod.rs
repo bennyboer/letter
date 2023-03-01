@@ -1,3 +1,4 @@
+use std::io::Cursor;
 use std::{fs::File, io::BufWriter};
 
 use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point};
@@ -97,10 +98,12 @@ fn draw_elements_on_layer(
         .height
         .value(DistanceUnit::Millimeter);
 
-    // TODO Loading the font everytime is expensive -> need some kind of font cache to only load a font once
-    let font = document
-        .add_external_font(File::open("C:/Windows/Fonts/TisaPro.otf").unwrap())
-        .unwrap();
+    // TODO Add all fonts at the beginning of rendering the PDF instead of here!
+    // TODO Subset font before using
+    let letter_font = document_layout.get_default_font(); // TODO Implement real font lookup
+    let font_data = letter_font.to_internal().face().face_data().to_vec();
+    let font_read_cursor = Cursor::new(font_data);
+    let font = document.add_external_font(font_read_cursor).unwrap();
 
     for element_id in page.elements() {
         if let Some(element) = document_layout.element(element_id) {

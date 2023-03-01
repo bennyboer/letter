@@ -1,5 +1,6 @@
-use harfbuzz_rs::{shape, Face, Font, UnicodeBuffer};
+use harfbuzz_rs::{shape, UnicodeBuffer};
 
+use font::LetterFont;
 pub use glyph::GlyphDetails;
 use unit::{Distance, DistanceUnit};
 
@@ -10,17 +11,17 @@ mod glyph;
 mod result;
 
 // TODO Extract shape_text to some kind of shaper-service that can be mocked in tests
-pub fn shape_text(text: &str, font_size: Distance) -> TypesetResult<TextShaperResult> {
+pub fn shape_text(
+    text: &str,
+    font_size: Distance,
+    font: &LetterFont,
+) -> TypesetResult<TextShaperResult> {
     // TODO This will parse the font each invocation which is expensive -> Refactor to only create font and buffer once
-
-    let font_path = "C:/repo/kerning/fonts/Adobe/TisaPro/TisaPro.otf";
-    let font_face_index = 0;
-    let font_face = Face::from_file(font_path, font_face_index)?;
-    let units_per_em = font_face.upem() as usize;
-    let font = Font::new(font_face);
+    let internal_font = font.to_internal();
+    let units_per_em = internal_font.face().upem() as usize;
 
     let buffer = UnicodeBuffer::new().add_str(text);
-    let output = shape(&font, buffer, &[]);
+    let output = shape(&internal_font, buffer, &[]);
 
     let positions = output.get_glyph_positions();
     let infos = output.get_glyph_infos();
@@ -36,7 +37,7 @@ pub fn shape_text(text: &str, font_size: Distance) -> TypesetResult<TextShaperRe
     for (position, info) in positions.iter().zip(infos) {
         let codepoint = info.codepoint;
         let font_x_advance = Distance::new(
-            font.get_glyph_h_advance(codepoint) as f64,
+            internal_font.get_glyph_h_advance(codepoint) as f64,
             DistanceUnit::FontUnits {
                 units_per_em,
                 font_size: font_size.value(DistanceUnit::Millimeter),
@@ -50,7 +51,7 @@ pub fn shape_text(text: &str, font_size: Distance) -> TypesetResult<TextShaperRe
             },
         );
         let glyph_details = GlyphDetails {
-            codepoint: codepoint,
+            codepoint,
             cluster: info.cluster,
             x_advance,
             font_x_advance,

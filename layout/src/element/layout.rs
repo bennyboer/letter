@@ -1,17 +1,25 @@
 use std::collections::HashMap;
 
+use font::{FontManager, LetterFont};
+
 use super::{ElementId, LayoutElement, Page};
 
-pub struct DocumentLayout {
+pub struct DocumentLayout<'a> {
     pages: Vec<Page>,
     element_lookup: HashMap<ElementId, LayoutElement>,
+    font_manager: FontManager<'a>,
 }
 
-impl DocumentLayout {
-    pub fn new(pages: Vec<Page>, element_lookup: HashMap<ElementId, LayoutElement>) -> Self {
+impl<'a> DocumentLayout<'a> {
+    pub fn new(
+        pages: Vec<Page>,
+        element_lookup: HashMap<ElementId, LayoutElement>,
+        font_manager: FontManager<'a>,
+    ) -> Self {
         Self {
             pages,
             element_lookup,
+            font_manager,
         }
     }
 
@@ -21,5 +29,9 @@ impl DocumentLayout {
 
     pub fn pages(&self) -> &[Page] {
         &self.pages
+    }
+
+    pub fn get_default_font(&self) -> &LetterFont {
+        self.font_manager.get_font(&self.font_manager.default_font_id()).unwrap()
     }
 }

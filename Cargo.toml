@@ -3,6 +3,7 @@ members = [
     "cli",
     "document",
     "export",
+    "font",
     "layout",
     "script",
     "style",

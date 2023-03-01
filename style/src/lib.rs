@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use pest::iterators::Pairs;
 use pest::Parser;
 
-use document::style::{ClassName, DocumentStyles, NodeName, Style, StyleDefinition};
+use document::style::{ClassName, DocumentStyles, FontFamilySource, NodeName, Style, StyleDefinition};
 use unit::{Distance, DistanceUnit};
 
 use crate::result::StyleParseResult;
@@ -229,6 +229,28 @@ fn parse_font_styles(
     if properties.contains_key("size") {
         let distance = parse_distance_property(&properties, "size")?;
         result.push(Style::FontSize(distance));
+    }
+    
+    if properties.contains_key("family") {
+        let family = properties.get("family").unwrap().as_str().trim();
+        
+        match family {
+            "default" => result.push(Style::FontFamily(FontFamilySource::Default)),
+            _ => {
+                let is_url = family.starts_with("url(") && family.ends_with(")");
+                if is_url {
+                    let url = family
+                        .strip_prefix("url(")
+                        .unwrap()
+                        .strip_suffix(")")
+                        .unwrap()
+                        .to_owned();
+                    result.push(Style::FontFamily(FontFamilySource::Path(url)));
+                } else {
+                    result.push(Style::FontFamily(FontFamilySource::Name(family.to_owned())));
+                }
+            }
+        };
     }
 
     Ok(())

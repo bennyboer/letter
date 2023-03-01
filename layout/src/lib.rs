@@ -42,11 +42,11 @@ pub fn layout(document: &Document, options: LayoutOptions) -> LayoutResult<Docum
     }
 }
 
-fn layout_pass(
+fn layout_pass<'a>(
     document: &Document,
-    last_pass_layout: Option<DocumentLayout>,
+    last_pass_layout: Option<DocumentLayout<'a>>,
     _options: &LayoutOptions,
-) -> LayoutResult<LayoutPassResult> {
+) -> LayoutResult<LayoutPassResult<'a>> {
     let page_sizing = create_page_sizing_behavior(document);
     let mut ctx = LayoutContext::new(last_pass_layout, page_sizing);
 
@@ -141,6 +141,7 @@ fn apply_to_layout_style(layout_style: &LayoutStyle, styles: &Vec<&Style>) -> La
                 result.set_padding(result.padding().with_left(*distance))
             }
             Style::FontSize(distance) => result.set_font_size(*distance),
+            Style::FontFamily(font_family) => result.set_font_family(font_family.clone()),
         };
     }
 
@@ -198,7 +199,7 @@ fn get_root_layout_constraints(document: &Document) -> LayoutConstraints {
     LayoutConstraints::new(size, margin_top, margin_right, margin_bottom, margin_left)
 }
 
-struct LayoutPassResult {
+struct LayoutPassResult<'a> {
     stable: bool,
-    layout: DocumentLayout,
+    layout: DocumentLayout<'a>,
 }

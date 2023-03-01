@@ -7,9 +7,11 @@ pub use crate::style::definition::StyleDefinition;
 use crate::style::id::StyleId;
 pub use crate::style::node::NodeName;
 use crate::style::resolver::StyleResolver;
+pub use font_family::FontFamilySource;
 
 mod class;
 mod definition;
+mod font_family;
 mod id;
 mod node;
 mod resolver;
@@ -74,4 +76,5 @@ pub enum Style {
     PaddingLeft(Distance),
 
     FontSize(Distance),
+    FontFamily(FontFamilySource),
 }

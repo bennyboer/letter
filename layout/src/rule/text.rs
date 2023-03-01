@@ -51,9 +51,14 @@ fn layout_text(
         bounds.size().width
     };
 
-    let font_size = *style.font_size(); // TODO Make configurable
+    let font_size = *style.font_size();
+    let font_family = style.font_family().clone();
+    let font = ctx.find_font(&font_family).ok_or(format!(
+        "Could not find font for font-family: {:?}",
+        font_family
+    ))?;
     let line_height = font_size * 1.2; // TODO Make configurable
-    let white_space_width: Distance = shape_text(" ", font_size)?.width; // TODO Can probably be removed when using the Knuth-Plass algorithm
+    let white_space_width: Distance = shape_text(" ", font_size, ctx.get_font(&font))?.width; // TODO Can probably be removed when using the Knuth-Plass algorithm
 
     let mut y_offset = Distance::zero();
     let mut x_offset = Distance::zero();
@@ -65,7 +70,7 @@ fn layout_text(
     // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
     for text_part in text.split_whitespace() {
         // TODO Return complete shaper result and store in typeset element for text
-        let shaped_text_part = shape_text(text_part, font_size)?;
+        let shaped_text_part = shape_text(text_part, font_size, ctx.get_font(&font))?;
         let text_part_width = shaped_text_part.width;
 
         let needs_whitespace_prefix = x_offset != Distance::zero();

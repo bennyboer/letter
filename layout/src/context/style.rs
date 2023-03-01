@@ -1,3 +1,4 @@
+use document::style::FontFamilySource;
 use unit::{Distance, DistanceUnit};
 
 use crate::context::insets::Insets;
@@ -9,6 +10,7 @@ pub(crate) struct LayoutStyle {
     margin: Insets,
     padding: Insets,
     font_size: Distance,
+    font_family: FontFamilySource,
 }
 
 impl LayoutStyle {
@@ -18,6 +20,7 @@ impl LayoutStyle {
             margin: Insets::zero(),
             padding: Insets::zero(),
             font_size: Distance::new(12.0, DistanceUnit::Points),
+            font_family: FontFamilySource::Default,
         }
     }
 
@@ -37,6 +40,10 @@ impl LayoutStyle {
         &self.font_size
     }
 
+    pub fn font_family(&self) -> &FontFamilySource {
+        &self.font_family
+    }
+
     pub fn set_size(&mut self, size: Size) {
         self.size = size;
     }
@@ -51,5 +58,9 @@ impl LayoutStyle {
 
     pub fn set_font_size(&mut self, size: Distance) {
         self.font_size = size;
+    }
+
+    pub fn set_font_family(&mut self, family: FontFamilySource) {
+        self.font_family = family;
     }
 }

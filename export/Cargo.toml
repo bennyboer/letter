@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 layout = { path = "../layout" }
 unit = { path = "../unit" }
+font = { path = "../font" }
 log = "0.4.17"
 printpdf = "0.5.3"

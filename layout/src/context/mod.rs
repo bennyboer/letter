@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+use document::style::FontFamilySource;
+use font::{FontId, FontManager, LetterFont};
+
 pub(crate) use crate::context::insets::Insets;
 pub(crate) use crate::context::page_sizing::{OneSizeFitsAllPageSizing, PageSizing};
 pub(crate) use crate::context::style::LayoutStyle;
@@ -11,8 +14,8 @@ mod insets;
 mod page_sizing;
 mod style;
 
-pub(crate) struct LayoutContext {
-    _last_pass_layout: Option<DocumentLayout>,
+pub(crate) struct LayoutContext<'a> {
+    _last_pass_layout: Option<DocumentLayout<'a>>,
 
     page_sizing: Box<dyn PageSizing>,
 
@@ -34,10 +37,15 @@ pub(crate) struct LayoutContext {
 
     /// All elements that have been laid out.
     element_lookup: HashMap<ElementId, LayoutElement>,
+
+    font_manager: FontManager<'a>,
 }
 
-impl LayoutContext {
-    pub fn new(last_pass_layout: Option<DocumentLayout>, page_sizing: Box<dyn PageSizing>) -> Self {
+impl<'a> LayoutContext<'a> {
+    pub fn new(
+        last_pass_layout: Option<DocumentLayout<'a>>,
+        page_sizing: Box<dyn PageSizing>,
+    ) -> Self {
         let mut result = Self {
             _last_pass_layout: last_pass_layout,
             page_sizing,
@@ -45,15 +53,16 @@ impl LayoutContext {
             bounds: Bounds::empty(),
             pages: Vec::new(),
             element_lookup: HashMap::new(),
+            font_manager: FontManager::new(),
         };
-        
+
         result.push_page();
-        
+
         result
     }
 
-    pub(crate) fn to_layout(self) -> DocumentLayout {
-        DocumentLayout::new(self.pages, self.element_lookup)
+    pub(crate) fn to_layout(self) -> DocumentLayout<'a> {
+        DocumentLayout::new(self.pages, self.element_lookup, self.font_manager)
     }
 
     pub(crate) fn is_stable(&self) -> bool {
@@ -112,6 +121,18 @@ impl LayoutContext {
         // TODO Currently we simply push a new page, but we could also have a multi-column layout where we simply break to the next column (set in styles with the `layout` property)
         self.push_page();
         self.bounds
+    }
+
+    pub(crate) fn find_font(&mut self, font_family: &FontFamilySource) -> Option<FontId> {
+        match font_family {
+            FontFamilySource::Default => Some(self.font_manager.default_font_id()),
+            FontFamilySource::Name(_) => None, // TODO
+            FontFamilySource::Path(_) => None, // TODO
+        }
+    }
+
+    pub(crate) fn get_font(&self, id: &FontId) -> &LetterFont {
+        self.font_manager.get_font(id).unwrap()
     }
 
     fn current_page(&mut self) -> &mut Page {

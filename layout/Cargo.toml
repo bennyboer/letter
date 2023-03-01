@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 unit = { path = "../unit" }
+font = { path = "../font" }
 document = { path = "../document" }
 typeset = { path = "../typeset" }
 log = "0.4.17"
