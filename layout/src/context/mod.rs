@@ -135,6 +135,10 @@ impl<'a> LayoutContext<'a> {
         self.font_manager.get_font(id).unwrap()
     }
 
+    pub(crate) fn get_font_mut(&mut self, id: &FontId) -> &mut LetterFont<'a> {
+        self.font_manager.get_font_mut(id).unwrap()
+    }
+
     fn current_page(&mut self) -> &mut Page {
         self.pages.last_mut().unwrap()
     }

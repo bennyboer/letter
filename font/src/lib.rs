@@ -35,6 +35,9 @@ impl<'a> FontManager<'a> {
 
         let default_font = LetterFont::from_bytes(DEFAULT_FONT_BYTES, 0);
         result.register_font(default_font);
+        result
+            .name_to_id
+            .insert("default".to_owned(), DEFAULT_FONT_ID);
 
         result
     }
@@ -48,6 +51,10 @@ impl<'a> FontManager<'a> {
 
     pub fn get_font(&self, font_id: &FontId) -> Option<&LetterFont> {
         self.registered_fonts.get(font_id)
+    }
+
+    pub fn get_font_mut(&mut self, font_id: &FontId) -> Option<&mut LetterFont<'a>> {
+        self.registered_fonts.get_mut(font_id)
     }
 
     pub fn default_font_id(&self) -> FontId {
@@ -101,5 +108,11 @@ impl<'a> FontManager<'a> {
         }
 
         font_id
+    }
+
+    pub fn subset_fonts(&mut self) {
+        for font in self.registered_fonts.values_mut() {
+            font.subset();
+        }
     }
 }

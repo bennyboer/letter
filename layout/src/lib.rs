@@ -1,8 +1,8 @@
 extern crate core;
 
+use document::Document;
 use document::structure::{DocumentNode, DocumentNodeValue};
 use document::style::{NodeName, Style};
-use document::Document;
 use unit::{Distance, DistanceUnit};
 
 use crate::context::{Insets, LayoutContext, LayoutStyle, OneSizeFitsAllPageSizing, PageSizing};
@@ -23,7 +23,7 @@ pub fn layout(document: &Document, options: LayoutOptions) -> LayoutResult<Docum
     loop {
         let layout_pass_result = layout_pass(document, last_pass_layout, &options)?;
         if layout_pass_result.stable {
-            return Ok(layout_pass_result.layout);
+            return Ok(finalize_layout(layout_pass_result.layout));
         }
 
         last_pass_layout = Some(layout_pass_result.layout);
@@ -40,8 +40,6 @@ pub fn layout(document: &Document, options: LayoutOptions) -> LayoutResult<Docum
             .into());
         }
     }
-
-    // TODO Subset fonts after layout
 }
 
 fn layout_pass<'a>(
@@ -199,6 +197,12 @@ fn get_root_layout_constraints(document: &Document) -> LayoutConstraints {
 
     let size = Size::new(width, height);
     LayoutConstraints::new(size, margin_top, margin_right, margin_bottom, margin_left)
+}
+
+fn finalize_layout(mut layout: DocumentLayout) -> DocumentLayout {
+    layout.finalize();
+
+    layout
 }
 
 struct LayoutPassResult<'a> {

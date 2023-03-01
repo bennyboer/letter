@@ -556,7 +556,7 @@ dependencies = [
 [[package]]
 name = "harfbuzz_rs"
 version = "2.0.2-alpha.0"
-source = "git+https://github.com/bennyboer/harfbuzz_rs#5f745bbb84c4d2dde16e065d07bbb84854c93c95"
+source = "git+https://github.com/bennyboer/harfbuzz_rs#60deab97f0c6caad0d67cf4f89b6ccbbd07ac594"
 dependencies = [
  "bitflags",
  "harfbuzz-bindings",

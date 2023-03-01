@@ -7,7 +7,7 @@ use super::{ElementId, LayoutElement, Page};
 pub struct DocumentLayout<'a> {
     pages: Vec<Page>,
     element_lookup: HashMap<ElementId, LayoutElement>,
-    font_manager: FontManager<'a>,
+    pub font_manager: FontManager<'a>,
 }
 
 impl<'a> DocumentLayout<'a> {
@@ -33,5 +33,9 @@ impl<'a> DocumentLayout<'a> {
 
     pub fn get_font(&self, id: &FontId) -> Option<&LetterFont> {
         self.font_manager.get_font(id)
+    }
+
+    pub(crate) fn finalize(&mut self) {
+        self.font_manager.subset_fonts();
     }
 }

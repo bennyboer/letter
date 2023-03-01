@@ -1,6 +1,7 @@
 use document::structure::{DocumentNode, DocumentNodeValue};
 use document::Document;
-use typeset::glyph_shaping::shape_text;
+use font::LetterFont;
+use typeset::glyph_shaping::{shape_text, GlyphDetails};
 use unit::Distance;
 
 use crate::context::LayoutContext;
@@ -70,7 +71,14 @@ fn layout_text(
     // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
     for text_part in text.split_whitespace() {
         // TODO Return complete shaper result and store in typeset element for text
-        let shaped_text_part = shape_text(text_part, font_size, ctx.get_font(&font))?;
+        let shaped_text_part = {
+            let font = ctx.get_font_mut(&font);
+            let result = shape_text(text_part, font_size, font)?;
+
+            mark_codepoints_as_used(font, &result.glyphs);
+
+            result
+        };
         let text_part_width = shaped_text_part.width;
 
         let needs_whitespace_prefix = x_offset != Distance::zero();
@@ -116,4 +124,11 @@ fn layout_text(
     ctx.set_bounds(new_bounds);
 
     Ok(())
+}
+
+fn mark_codepoints_as_used(font: &mut LetterFont, glyphs: &Vec<GlyphDetails>) {
+    for glyph in glyphs {
+        let codepoint = glyph.codepoint;
+        font.mark_codepoint_as_used(codepoint);
+    }
 }

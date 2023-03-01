@@ -1,9 +1,11 @@
+use std::collections::HashSet;
 use std::path::Path;
 
-use harfbuzz_rs::{Blob, Face, Font, Owned, Shared};
+use harfbuzz_rs::{subset, Blob, Face, Font, Owned, Shared};
 
 pub struct LetterFont<'a> {
     internal_font: Owned<Font<'a>>,
+    used_codepoints: HashSet<u32>,
 }
 
 impl<'a> LetterFont<'a> {
@@ -12,6 +14,7 @@ impl<'a> LetterFont<'a> {
 
         Self {
             internal_font: font,
+            used_codepoints: HashSet::new(),
         }
     }
 
@@ -36,5 +39,20 @@ impl<'a> LetterFont<'a> {
 
     pub fn to_internal(&self) -> &Font<'a> {
         &self.internal_font
+    }
+
+    pub fn mark_codepoint_as_used(&mut self, codepoint: u32) {
+        self.used_codepoints.insert(codepoint);
+    }
+
+    pub(crate) fn subset(&mut self) {
+        let used_codepoints: Vec<u32> = self.used_codepoints.iter().copied().collect();
+        let bytes = subset(&mut self.internal_font, &used_codepoints);
+
+        let blob = Blob::with_bytes_owned(bytes, |t| t.as_ref());
+        let font_face = Face::new(blob, 0);
+
+        let font = Font::new(font_face);
+        self.internal_font = font;
     }
 }
