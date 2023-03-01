@@ -126,8 +126,8 @@ impl<'a> LayoutContext<'a> {
     pub(crate) fn find_font(&mut self, font_family: &FontFamilySource) -> Option<FontId> {
         match font_family {
             FontFamilySource::Default => Some(self.font_manager.default_font_id()),
-            FontFamilySource::Name(_) => None, // TODO
-            FontFamilySource::Path(_) => None, // TODO
+            FontFamilySource::Name(name) => self.font_manager.find_by_name(name.as_str()),
+            FontFamilySource::Path(path) => self.font_manager.find_by_path(path.as_str()),
         }
     }
 

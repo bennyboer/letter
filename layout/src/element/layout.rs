@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use font::{FontManager, LetterFont};
+use font::{FontId, FontManager, LetterFont};
 
 use super::{ElementId, LayoutElement, Page};
 
@@ -31,7 +31,7 @@ impl<'a> DocumentLayout<'a> {
         &self.pages
     }
 
-    pub fn get_default_font(&self) -> &LetterFont {
-        self.font_manager.get_font(&self.font_manager.default_font_id()).unwrap()
+    pub fn get_font(&self, id: &FontId) -> Option<&LetterFont> {
+        self.font_manager.get_font(id)
     }
 }

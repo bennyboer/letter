@@ -12,11 +12,12 @@ KeyValuePair = { Key ~ ":" ~ Value }
 Key = { ALPHABETIC+ }
 Value = { SimpleValue | UnnamedBlock }
 
-SimpleValue = { ( TextCharacter | NumberCharacter | RoundBrackets )+ ~ ";" }
+SimpleValue = { ( TextCharacter | NumberCharacter | RoundBrackets | SpecialSymbols )+ ~ ";" }
 TextCharacter = { ALPHABETIC | QuotationMarks }
 QuotationMarks = { "\"" | "'" }
 NumberCharacter = { ASCII_DIGIT | "." | "-" | "+" }
 RoundBrackets = { "(" | ")" }
+SpecialSymbols = { "/" | "\\" | "." | ":" }
 
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }

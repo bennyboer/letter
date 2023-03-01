@@ -96,6 +96,7 @@ fn layout_text(
             let bounds = Bounds::new(position, size);
 
             let content = LayoutElementContent::TextSlice(TextSliceContent {
+                font,
                 font_size,
                 glyphs: shaped_text_part.glyphs,
             });

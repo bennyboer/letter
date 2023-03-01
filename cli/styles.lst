@@ -13,7 +13,7 @@ document {
 
 heading {
   font: {
-    size: 20pt;
+    size: 40pt;
   }
   margin: {
     bottom: 5mm;
@@ -32,6 +32,9 @@ image {
 }
 
 paragraph {
+  font: {
+    size: 11pt;
+  }
   margin: {
     bottom: 2mm;
   }

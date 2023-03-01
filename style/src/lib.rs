@@ -7,7 +7,9 @@ use std::collections::HashMap;
 use pest::iterators::Pairs;
 use pest::Parser;
 
-use document::style::{ClassName, DocumentStyles, FontFamilySource, NodeName, Style, StyleDefinition};
+use document::style::{
+    ClassName, DocumentStyles, FontFamilySource, NodeName, Style, StyleDefinition,
+};
 use unit::{Distance, DistanceUnit};
 
 use crate::result::StyleParseResult;
@@ -230,10 +232,10 @@ fn parse_font_styles(
         let distance = parse_distance_property(&properties, "size")?;
         result.push(Style::FontSize(distance));
     }
-    
+
     if properties.contains_key("family") {
         let family = properties.get("family").unwrap().as_str().trim();
-        
+
         match family {
             "default" => result.push(Style::FontFamily(FontFamilySource::Default)),
             _ => {

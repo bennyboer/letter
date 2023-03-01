@@ -40,6 +40,8 @@ pub fn layout(document: &Document, options: LayoutOptions) -> LayoutResult<Docum
             .into());
         }
     }
+
+    // TODO Subset fonts after layout
 }
 
 fn layout_pass<'a>(

@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use std::io::Cursor;
 use std::{fs::File, io::BufWriter};
 
-use printpdf::{Color, Greyscale, Line, Mm, PdfDocument, Point};
+use printpdf::{Color, Greyscale, IndirectFontRef, Line, Mm, PdfDocument, Point};
 
+use font::FontId;
 use layout::element::content::LayoutElementContent;
 use layout::element::{DocumentLayout, Page};
 use unit::{Distance, DistanceUnit};
@@ -30,6 +32,7 @@ pub(crate) fn export_as_pdf(document_layout: DocumentLayout) -> ExportResult<()>
     let mut is_first_page = true;
     let mut pdf_page = document.get_page(page_index);
     let mut pdf_layer = pdf_page.get_layer(layer_index);
+    let mut font_cache = HashMap::new();
 
     for page in document_layout.pages() {
         if !is_first_page {
@@ -42,8 +45,14 @@ pub(crate) fn export_as_pdf(document_layout: DocumentLayout) -> ExportResult<()>
             pdf_layer = pdf_page.get_layer(layer_index);
         }
 
-        draw_page_content_outline(&pdf_layer, page);
-        draw_elements_on_layer(&document, &pdf_layer, &document_layout, page);
+        // draw_page_content_outline(&pdf_layer, page);
+        draw_elements_on_layer(
+            &document,
+            &pdf_layer,
+            &document_layout,
+            page,
+            &mut font_cache,
+        );
 
         is_first_page = false;
     }
@@ -55,7 +64,7 @@ pub(crate) fn export_as_pdf(document_layout: DocumentLayout) -> ExportResult<()>
     Ok(())
 }
 
-fn draw_page_content_outline(pdf_layer: &printpdf::PdfLayerReference, page: &Page) {
+fn _draw_page_content_outline(pdf_layer: &printpdf::PdfLayerReference, page: &Page) {
     let layout_constraints = page.constraints();
     let page_width = layout_constraints
         .size()
@@ -91,19 +100,13 @@ fn draw_elements_on_layer(
     pdf_layer: &printpdf::PdfLayerReference,
     document_layout: &DocumentLayout,
     page: &Page,
+    font_cache: &mut HashMap<FontId, IndirectFontRef>,
 ) {
     let layout_constraints = page.constraints();
     let page_height = layout_constraints
         .size()
         .height
         .value(DistanceUnit::Millimeter);
-
-    // TODO Add all fonts at the beginning of rendering the PDF instead of here!
-    // TODO Subset font before using
-    let letter_font = document_layout.get_default_font(); // TODO Implement real font lookup
-    let font_data = letter_font.to_internal().face().face_data().to_vec();
-    let font_read_cursor = Cursor::new(font_data);
-    let font = document.add_external_font(font_read_cursor).unwrap();
 
     for element_id in page.elements() {
         if let Some(element) = document_layout.element(element_id) {
@@ -112,6 +115,7 @@ fn draw_elements_on_layer(
             match element.content() {
                 LayoutElementContent::TextSlice(content) => {
                     let font_size = content.font_size;
+                    let font = load_font(content.font, document, document_layout, font_cache);
 
                     pdf_layer.begin_text_section();
 
@@ -154,4 +158,27 @@ fn draw_elements_on_layer(
             };
         }
     }
+}
+
+fn load_font(
+    font_id: FontId,
+    document: &printpdf::PdfDocumentReference,
+    document_layout: &DocumentLayout,
+    font_cache: &mut HashMap<FontId, IndirectFontRef>,
+) -> IndirectFontRef {
+    if let Some(font) = font_cache.get(&font_id) {
+        return font.clone();
+    }
+
+    let letter_font = document_layout
+        .get_font(&font_id)
+        .expect("Font must be present during export");
+
+    let font_data = letter_font.to_internal().face().face_data().to_vec();
+    let font_read_cursor = Cursor::new(font_data);
+
+    let font = document.add_external_font(font_read_cursor).unwrap();
+    font_cache.insert(font_id, font.clone());
+
+    font
 }
