@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error::Error;
 
 use quick_xml::events::attributes::Attributes;
@@ -73,6 +74,7 @@ fn handle_event(
             reader.decoder().decode(e.local_name().as_ref())?.as_ref(),
             e.attributes(),
             offset,
+            reader,
             context,
         ),
         Event::End(e) => leave_child_node(
@@ -83,6 +85,7 @@ fn handle_event(
             reader.decoder().decode(e.local_name().as_ref())?.as_ref(),
             e.attributes(),
             offset,
+            reader,
             context,
         ),
         Event::Text(e) => push_text_node(e.unescape()?.into_owned(), offset, context),
@@ -101,9 +104,10 @@ fn push_child_node(
     name: &str,
     attributes: Attributes,
     offset: usize,
+    reader: &Reader<&[u8]>,
     context: &mut ParseContext,
 ) -> ParseResult<()> {
-    let node = to_node(name, offset, attributes, context)?;
+    let node = to_node(name, offset, attributes, reader, context)?;
     insert_node(node, context);
 
     Ok(())
@@ -122,9 +126,10 @@ fn enter_child_node(
     name: &str,
     attributes: Attributes,
     offset: usize,
+    reader: &Reader<&[u8]>,
     context: &mut ParseContext,
 ) -> ParseResult<()> {
-    let node = to_node(name, offset, attributes, context)?;
+    let node = to_node(name, offset, attributes, reader, context)?;
     let node_id = node.id;
     insert_node(node, context);
 
@@ -152,19 +157,47 @@ fn to_node(
     name: &str,
     offset: usize,
     attributes: Attributes,
+    reader: &Reader<&[u8]>,
     context: &mut ParseContext,
 ) -> ParseResult<DocumentNode> {
     let source_position = find_source_position(offset, context);
 
+    let attributes_lookup = read_attributes_lookup(attributes, reader)?;
+
     let node_id = context.document_structure.unused_node_id();
-    let node_value = to_node_value(name, attributes, source_position)?;
+    let node_value = to_node_value(name, &attributes_lookup, source_position)?;
 
     Ok(DocumentNode::new(
         node_id,
         Some(name.to_owned()),
         node_value,
+        attributes_lookup,
         Some(source_position),
     ))
+}
+
+fn read_attributes_lookup(
+    attributes: Attributes,
+    reader: &Reader<&[u8]>,
+) -> ParseResult<HashMap<String, String>> {
+    let mut attributes_lookup = HashMap::new();
+    for attribute in attributes {
+        let attribute = attribute?;
+        let name = reader
+            .decoder()
+            .decode(attribute.key.as_ref())?
+            .as_ref()
+            .to_owned();
+        let value = reader
+            .decoder()
+            .decode(attribute.value.as_ref())?
+            .as_ref()
+            .to_owned();
+
+        attributes_lookup.insert(name, value);
+    }
+
+    Ok(attributes_lookup)
 }
 
 fn to_text_node(text: String, offset: usize, context: &mut ParseContext) -> DocumentNode {
@@ -176,17 +209,16 @@ fn to_text_node(text: String, offset: usize, context: &mut ParseContext) -> Docu
         node_id,
         None,
         DocumentNodeValue::Text(text),
+        HashMap::new(),
         Some(source_position),
     )
 }
 
 fn to_node_value(
     name: &str,
-    _attributes: Attributes,
+    _attributes: &HashMap<String, String>,
     source_position: SourcePosition,
 ) -> ParseResult<DocumentNodeValue> {
-    // TODO Parse attributes
-
     Ok(match name {
         "section" | "s" => DocumentNodeValue::Section,
         "paragraph" | "p" => DocumentNodeValue::Paragraph,

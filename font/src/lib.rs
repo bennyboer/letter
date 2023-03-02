@@ -7,15 +7,17 @@ use font_kit::source::SystemSource;
 
 pub use font::LetterFont;
 pub use id::FontId;
+pub use variation::{FontVariationId, LetterFontVariation};
 
 use crate::id::FontIdGenerator;
 
 mod font;
 mod id;
+mod variation;
 
 const DEFAULT_FONT_ID: FontId = 0;
 const DEFAULT_FONT_BYTES: &[u8] =
-    include_bytes!("../../assets/fonts/lexend/Lexend-VariableFont_wght.ttf");
+    include_bytes!("../../assets/fonts/readexpro/Readexpro[HEXP,wght].ttf");
 
 pub struct FontManager<'a> {
     font_id_generator: FontIdGenerator,
@@ -109,7 +111,7 @@ impl<'a> FontManager<'a> {
 
         font_id
     }
-
+    
     pub fn subset_fonts(&mut self) {
         for font in self.registered_fonts.values_mut() {
             font.subset();

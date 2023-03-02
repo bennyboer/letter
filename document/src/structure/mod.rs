@@ -26,6 +26,7 @@ impl DocumentStructure {
             root_node_id,
             Some("document".to_owned()),
             DocumentNodeValue::DocumentRoot,
+            HashMap::new(),
             None,
         );
 

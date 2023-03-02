@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+pub use font_family::FontFamilySource;
+pub use font_variation_settings::{FontVariation, FontVariationSettings};
 use unit::Distance;
 
 pub use crate::style::class::ClassName;
@@ -7,11 +9,11 @@ pub use crate::style::definition::StyleDefinition;
 use crate::style::id::StyleId;
 pub use crate::style::node::NodeName;
 use crate::style::resolver::StyleResolver;
-pub use font_family::FontFamilySource;
 
 mod class;
 mod definition;
 mod font_family;
+mod font_variation_settings;
 mod id;
 mod node;
 mod resolver;
@@ -77,4 +79,5 @@ pub enum Style {
 
     FontSize(Distance),
     FontFamily(FontFamilySource),
+    FontVariationSettings(FontVariationSettings),
 }

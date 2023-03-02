@@ -1,4 +1,4 @@
-use document::style::FontFamilySource;
+use document::style::{FontFamilySource, FontVariationSettings};
 use unit::{Distance, DistanceUnit};
 
 use crate::context::insets::Insets;
@@ -11,6 +11,7 @@ pub(crate) struct LayoutStyle {
     padding: Insets,
     font_size: Distance,
     font_family: FontFamilySource,
+    font_variation_settings: FontVariationSettings,
 }
 
 impl LayoutStyle {
@@ -21,6 +22,7 @@ impl LayoutStyle {
             padding: Insets::zero(),
             font_size: Distance::new(12.0, DistanceUnit::Points),
             font_family: FontFamilySource::Default,
+            font_variation_settings: FontVariationSettings { variations: vec![] },
         }
     }
 
@@ -43,6 +45,10 @@ impl LayoutStyle {
     pub fn font_family(&self) -> &FontFamilySource {
         &self.font_family
     }
+    
+    pub fn font_variation_settings(&self) -> &FontVariationSettings {
+        &self.font_variation_settings
+    }
 
     pub fn set_size(&mut self, size: Size) {
         self.size = size;
@@ -62,5 +68,9 @@ impl LayoutStyle {
 
     pub fn set_font_family(&mut self, family: FontFamilySource) {
         self.font_family = family;
+    }
+    
+    pub fn set_font_variation_settings(&mut self, settings: FontVariationSettings) {
+        self.font_variation_settings = settings;
     }
 }

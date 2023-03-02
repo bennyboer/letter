@@ -9,15 +9,15 @@ NodeName = { ALPHABETIC+ }
 ClassName = { "." ~ ALPHABETIC+ }
 
 KeyValuePair = { Key ~ ":" ~ Value }
-Key = { ALPHABETIC+ }
+Key = { (TextCharacter | "-")+ }
 Value = { SimpleValue | UnnamedBlock }
 
-SimpleValue = { ( TextCharacter | NumberCharacter | RoundBrackets | SpecialSymbols )+ ~ ";" }
-TextCharacter = { ALPHABETIC | QuotationMarks }
+SimpleValue = { ( TextCharacter | QuotationMarks | NumberCharacter | RoundBrackets | SpecialSymbols )+ ~ ";" }
+TextCharacter = { ALPHABETIC }
 QuotationMarks = { "\"" | "'" }
 NumberCharacter = { ASCII_DIGIT | "." | "-" | "+" }
 RoundBrackets = { "(" | ")" }
-SpecialSymbols = { "/" | "\\" | "." | ":" }
+SpecialSymbols = { "/" | "\\" | "." | ":" | "," }
 
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }

@@ -8,7 +8,8 @@ use pest::iterators::Pairs;
 use pest::Parser;
 
 use document::style::{
-    ClassName, DocumentStyles, FontFamilySource, NodeName, Style, StyleDefinition,
+    ClassName, DocumentStyles, FontFamilySource, FontVariation, FontVariationSettings, NodeName,
+    Style, StyleDefinition,
 };
 use unit::{Distance, DistanceUnit};
 
@@ -253,6 +254,45 @@ fn parse_font_styles(
                 }
             }
         };
+    }
+
+    if properties.contains_key("variation-settings") {
+        let variation_settings = properties
+            .get("variation-settings")
+            .unwrap()
+            .as_str()
+            .trim();
+
+        let settings_pairs: Vec<&str> = variation_settings.split(",").collect();
+        let mut variations = Vec::new();
+        for settings_pair in settings_pairs {
+            let settings_pair = settings_pair.trim();
+
+            let parts: Vec<&str> = settings_pair.split(" ").collect();
+            if parts.len() != 2 {
+                return Err("variation-settings must be in the format '\"tag\" value'"
+                    .to_owned()
+                    .into());
+            }
+
+            let axis_name = parts[0].trim_matches('\"').trim_matches('\'');
+            let axis_value = parts[1].parse::<i32>()?;
+
+            if axis_name.len() != 4 {
+                return Err("variation-settings tag must be 4 characters long"
+                    .to_owned()
+                    .into());
+            }
+
+            variations.push(FontVariation {
+                name: axis_name.to_owned(),
+                value: axis_value,
+            });
+        }
+
+        result.push(Style::FontVariationSettings(FontVariationSettings {
+            variations,
+        }));
     }
 
     Ok(())

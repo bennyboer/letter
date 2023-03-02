@@ -1,4 +1,9 @@
+use std::collections::HashMap;
+
 use crate::structure::{DocumentNodeValue, NodeId, SourcePosition};
+use crate::style::ClassName;
+
+const CLASS_ATTRIBUTE: &'static str = "class";
 
 #[derive(Debug)]
 pub struct DocumentNode {
@@ -8,7 +13,7 @@ pub struct DocumentNode {
     pub children: Vec<NodeId>,
     pub value: DocumentNodeValue,
     pub source_position: Option<SourcePosition>,
-    // TODO attributes map (for example for the class attribute)
+    pub attributes: HashMap<String, String>,
 }
 
 impl DocumentNode {
@@ -16,6 +21,7 @@ impl DocumentNode {
         id: NodeId,
         name: Option<String>,
         value: DocumentNodeValue,
+        attributes: HashMap<String, String>,
         source_position: Option<SourcePosition>,
     ) -> Self {
         Self {
@@ -25,6 +31,7 @@ impl DocumentNode {
             children: Vec::new(),
             value,
             source_position,
+            attributes,
         }
     }
 
@@ -38,5 +45,9 @@ impl DocumentNode {
 
     pub fn children(&self) -> &[NodeId] {
         &self.children
+    }
+
+    pub fn class_name(&self) -> Option<&ClassName> {
+        self.attributes.get(CLASS_ATTRIBUTE)
     }
 }

@@ -4,7 +4,7 @@ use std::{fs::File, io::BufWriter};
 
 use printpdf::{Color, Greyscale, IndirectFontRef, Line, Mm, PdfDocument, Point};
 
-use font::FontId;
+use font::{FontId, FontVariationId};
 use layout::element::content::LayoutElementContent;
 use layout::element::{DocumentLayout, Page};
 use unit::{Distance, DistanceUnit};
@@ -100,7 +100,7 @@ fn draw_elements_on_layer(
     pdf_layer: &printpdf::PdfLayerReference,
     document_layout: &DocumentLayout,
     page: &Page,
-    font_cache: &mut HashMap<FontId, IndirectFontRef>,
+    font_cache: &mut HashMap<FontKey, IndirectFontRef>,
 ) {
     let layout_constraints = page.constraints();
     let page_height = layout_constraints
@@ -115,7 +115,13 @@ fn draw_elements_on_layer(
             match element.content() {
                 LayoutElementContent::TextSlice(content) => {
                     let font_size = content.font_size;
-                    let font = load_font(content.font, document, document_layout, font_cache);
+                    let font = load_font(
+                        content.font,
+                        content.font_variation,
+                        document,
+                        document_layout,
+                        font_cache,
+                    );
 
                     pdf_layer.begin_text_section();
 
@@ -162,23 +168,34 @@ fn draw_elements_on_layer(
 
 fn load_font(
     font_id: FontId,
+    font_variation_id: FontVariationId,
     document: &printpdf::PdfDocumentReference,
     document_layout: &DocumentLayout,
-    font_cache: &mut HashMap<FontId, IndirectFontRef>,
+    font_cache: &mut HashMap<FontKey, IndirectFontRef>,
 ) -> IndirectFontRef {
-    if let Some(font) = font_cache.get(&font_id) {
+    let font_key = FontKey {
+        font_id,
+        font_variation_id,
+    };
+
+    if let Some(font) = font_cache.get(&font_key) {
         return font.clone();
     }
 
-    let letter_font = document_layout
+    let font_data = document_layout
         .get_font(&font_id)
-        .expect("Font must be present during export");
-
-    let font_data = letter_font.to_internal().face().face_data().to_vec();
+        .and_then(|font| font.get_subsetted_font_data(&font_variation_id))
+        .expect("Subsetted font data must be present during export");
     let font_read_cursor = Cursor::new(font_data);
 
     let font = document.add_external_font(font_read_cursor).unwrap();
-    font_cache.insert(font_id, font.clone());
+    font_cache.insert(font_key, font.clone());
 
     font
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct FontKey {
+    font_id: FontId,
+    font_variation_id: FontVariationId,
 }

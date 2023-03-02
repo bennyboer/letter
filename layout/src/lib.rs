@@ -1,8 +1,8 @@
 extern crate core;
 
-use document::Document;
 use document::structure::{DocumentNode, DocumentNodeValue};
 use document::style::{NodeName, Style};
+use document::Document;
 use unit::{Distance, DistanceUnit};
 
 use crate::context::{Insets, LayoutContext, LayoutStyle, OneSizeFitsAllPageSizing, PageSizing};
@@ -88,7 +88,7 @@ fn push_node_styles(
 ) -> LayoutResult<()> {
     let node_name: Option<NodeName> = node.name().map(|name| name.into());
     if let Some(node_name) = node_name {
-        let class_name = None; // TODO Get class name from node
+        let class_name = node.class_name();
         let styles = document.styles.resolve(&node_name, class_name);
         let layout_style = apply_to_layout_style(ctx.current_style(), &styles);
 
@@ -142,6 +142,9 @@ fn apply_to_layout_style(layout_style: &LayoutStyle, styles: &Vec<&Style>) -> La
             }
             Style::FontSize(distance) => result.set_font_size(*distance),
             Style::FontFamily(font_family) => result.set_font_family(font_family.clone()),
+            Style::FontVariationSettings(settings) => {
+                result.set_font_variation_settings(settings.clone())
+            }
         };
     }
 

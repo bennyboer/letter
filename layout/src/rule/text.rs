@@ -1,6 +1,7 @@
 use document::structure::{DocumentNode, DocumentNodeValue};
+use document::style::FontVariationSettings;
 use document::Document;
-use font::LetterFont;
+use font::{FontVariationId, LetterFont, LetterFontVariation};
 use typeset::glyph_shaping::{shape_text, GlyphDetails};
 use unit::Distance;
 
@@ -54,12 +55,13 @@ fn layout_text(
 
     let font_size = *style.font_size();
     let font_family = style.font_family().clone();
-    let font = ctx.find_font(&font_family).ok_or(format!(
+    let font_variation_settings = style.font_variation_settings().clone();
+    let font_id = ctx.find_font(&font_family).ok_or(format!(
         "Could not find font for font-family: {:?}",
         font_family
     ))?;
     let line_height = font_size * 1.2; // TODO Make configurable
-    let white_space_width: Distance = shape_text(" ", font_size, ctx.get_font(&font))?.width; // TODO Can probably be removed when using the Knuth-Plass algorithm
+    let white_space_width: Distance = shape_text(" ", font_size, ctx.get_font(&font_id))?.width; // TODO Can probably be removed when using the Knuth-Plass algorithm
 
     let mut y_offset = Distance::zero();
     let mut x_offset = Distance::zero();
@@ -68,11 +70,19 @@ fn layout_text(
         bounds = ctx.choose_next_bounds();
     }
 
+    let mut font_initialized = false;
+    let mut font_variation_id = 0;
+
     // TODO Preprocess text properly (split by white-space and use hyphenation based on currently set language)
     for text_part in text.split_whitespace() {
         // TODO Return complete shaper result and store in typeset element for text
         let shaped_text_part = {
-            let font = ctx.get_font_mut(&font);
+            let font = ctx.get_font_mut(&font_id);
+            if !font_initialized {
+                font_variation_id = initialize_font_variations(font, &font_variation_settings);
+                font_initialized = true;
+            }
+
             let result = shape_text(text_part, font_size, font)?;
 
             mark_codepoints_as_used(font, &result.glyphs);
@@ -104,7 +114,8 @@ fn layout_text(
             let bounds = Bounds::new(position, size);
 
             let content = LayoutElementContent::TextSlice(TextSliceContent {
-                font,
+                font: font_id,
+                font_variation: font_variation_id,
                 font_size,
                 glyphs: shaped_text_part.glyphs,
             });
@@ -124,6 +135,18 @@ fn layout_text(
     ctx.set_bounds(new_bounds);
 
     Ok(())
+}
+
+fn initialize_font_variations(
+    font: &mut LetterFont,
+    font_variation_settings: &FontVariationSettings,
+) -> FontVariationId {
+    let variations: Vec<LetterFontVariation> = font_variation_settings
+        .variations
+        .iter()
+        .map(|v| LetterFontVariation::new(v.name.to_owned(), v.value))
+        .collect();
+    return font.set_variations(&variations);
 }
 
 fn mark_codepoints_as_used(font: &mut LetterFont, glyphs: &Vec<GlyphDetails>) {

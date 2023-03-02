@@ -13,10 +13,27 @@ document {
 
 heading {
   font: {
-    size: 40pt;
+    variation-settings: "wght" 800, "HEXP" 40;
+    size: 50pt;
   }
   margin: {
     bottom: 5mm;
+  }
+}
+
+heading.title {
+  margin: {
+    left: -4mm;
+  }
+}
+
+heading.subtitle {
+  font: {
+    variation-settings: "wght" 600, "HEXP" 20;
+    size: 18pt;
+  }
+  margin: {
+    bottom: 1cm;
   }
 }
 
@@ -33,9 +50,21 @@ image {
 
 paragraph {
   font: {
+    variation-settings: "wght" 250, "HEXP" 0;
     size: 11pt;
   }
   margin: {
     bottom: 2mm;
+  }
+}
+
+paragraph.special {
+  font: {
+    variation-settings: "wght" 500, "HEXP" 0;
+    size: 9pt;
+  }
+  margin: {
+    left: 4mm;
+    right: 3cm;
   }
 }

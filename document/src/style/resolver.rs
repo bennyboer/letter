@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use crate::style::class::ClassName;
 use crate::style::id::StyleId;
@@ -22,7 +22,7 @@ impl StyleResolver {
     }
 
     pub fn resolve(&self, node_name: &NodeName, class_name: Option<&ClassName>) -> Vec<StyleId> {
-        let mut styles: HashSet<StyleId> = HashSet::new();
+        let mut styles: Vec<StyleId> = Vec::new();
 
         self.resolve_styles_for_node_name(node_name, &mut styles);
 
@@ -47,7 +47,7 @@ impl StyleResolver {
         styles.push(style_id);
     }
 
-    fn resolve_styles_for_node_name(&self, node_name: &NodeName, result: &mut HashSet<StyleId>) {
+    fn resolve_styles_for_node_name(&self, node_name: &NodeName, result: &mut Vec<StyleId>) {
         let key = StyleKey {
             node_name: node_name.to_owned(),
             class_name: None,
@@ -61,7 +61,7 @@ impl StyleResolver {
         &self,
         node_name: &NodeName,
         class_name: &ClassName,
-        result: &mut HashSet<StyleId>,
+        result: &mut Vec<StyleId>,
     ) {
         let key = StyleKey {
             node_name: node_name.to_owned(),
