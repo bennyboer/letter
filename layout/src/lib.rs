@@ -4,12 +4,13 @@ use document::structure::{DocumentNode, DocumentNodeValue};
 use document::style::{NodeName, Style};
 use document::Document;
 use unit::{Distance, DistanceUnit};
+use DocumentNodeValue::{Heading, ListItem, Paragraph, Text};
 
 use crate::context::{Insets, LayoutContext, LayoutStyle, OneSizeFitsAllPageSizing, PageSizing};
 use crate::element::{DocumentLayout, LayoutConstraints, Size};
 use crate::options::LayoutOptions;
 use crate::result::LayoutResult;
-use crate::rule::{LayoutRule, TextLayoutRule};
+use crate::rule::{InlineLayoutRule, LayoutRule, TextLayoutRule};
 
 mod context;
 pub mod element;
@@ -65,108 +66,41 @@ fn process_node(
 ) -> LayoutResult<()> {
     let structure = &document.structure;
 
-    push_node_styles(node, document, ctx)?;
+    ctx.push_node_styles(node, document)?;
     {
-        layout_node_using_rule(node, document, ctx)?;
+        let is_consumed = layout_node_using_rule(node, document, ctx)?;
 
-        let node_ids = node.children();
-        for node_id in node_ids {
-            if let Some(node) = structure.get_node(*node_id) {
-                process_node(node, document, ctx)?;
+        if !is_consumed {
+            let node_ids = node.children();
+            for node_id in node_ids {
+                if let Some(node) = structure.get_node(*node_id) {
+                    process_node(node, document, ctx)?;
+                }
             }
         }
     }
-    pop_node_styles(node, document, ctx)?;
+    ctx.pop_node_styles(node)?;
 
     Ok(())
-}
-
-fn push_node_styles(
-    node: &DocumentNode,
-    document: &Document,
-    ctx: &mut LayoutContext,
-) -> LayoutResult<()> {
-    let node_name: Option<NodeName> = node.name().map(|name| name.into());
-    if let Some(node_name) = node_name {
-        let class_name = node.class_name();
-        let styles = document.styles.resolve(&node_name, class_name);
-        let layout_style = apply_to_layout_style(ctx.current_style(), &styles);
-
-        ctx.push_style(layout_style);
-    }
-
-    Ok(())
-}
-
-fn pop_node_styles(
-    node: &DocumentNode,
-    _ctx: &Document,
-    ctx: &mut LayoutContext,
-) -> LayoutResult<()> {
-    if node.name().is_some() {
-        ctx.pop_style();
-    }
-
-    Ok(())
-}
-
-fn apply_to_layout_style(layout_style: &LayoutStyle, styles: &Vec<&Style>) -> LayoutStyle {
-    let mut result = layout_style.clone();
-
-    // Size, margin and padding are not inherited
-    result.set_size(Size::max());
-    result.set_margin(Insets::zero());
-    result.set_padding(Insets::zero());
-
-    for style in styles {
-        match style {
-            Style::Width(distance) => result.set_size(result.size().with_width(*distance)),
-            Style::Height(distance) => result.set_size(result.size().with_height(*distance)),
-            Style::MarginTop(distance) => result.set_margin(result.margin().with_top(*distance)),
-            Style::MarginRight(distance) => {
-                result.set_margin(result.margin().with_right(*distance))
-            }
-            Style::MarginBottom(distance) => {
-                result.set_margin(result.margin().with_bottom(*distance))
-            }
-            Style::MarginLeft(distance) => result.set_margin(result.margin().with_left(*distance)),
-            Style::PaddingTop(distance) => result.set_padding(result.padding().with_top(*distance)),
-            Style::PaddingRight(distance) => {
-                result.set_padding(result.padding().with_right(*distance))
-            }
-            Style::PaddingBottom(distance) => {
-                result.set_padding(result.padding().with_bottom(*distance))
-            }
-            Style::PaddingLeft(distance) => {
-                result.set_padding(result.padding().with_left(*distance))
-            }
-            Style::FontSize(distance) => result.set_font_size(*distance),
-            Style::FontFamily(font_family) => result.set_font_family(font_family.clone()),
-            Style::FontVariationSettings(settings) => {
-                result.set_font_variation_settings(settings.clone())
-            }
-        };
-    }
-
-    result
 }
 
 fn layout_node_using_rule(
     node: &DocumentNode,
     document: &Document,
     ctx: &mut LayoutContext,
-) -> LayoutResult<()> {
+) -> LayoutResult<bool> {
     let rule = map_node_to_rule(node);
     if let Some(rule) = rule {
         rule.layout(node, document, ctx)?;
+        return Ok(true);
     }
 
-    Ok(())
+    Ok(false)
 }
 
 fn map_node_to_rule(node: &DocumentNode) -> Option<Box<dyn LayoutRule>> {
     match node.value {
-        DocumentNodeValue::Text(_) => Some(Box::new(TextLayoutRule::new())),
+        Text(_) | Paragraph | Heading | ListItem => Some(Box::new(InlineLayoutRule::new())),
         _ => None,
     }
 }

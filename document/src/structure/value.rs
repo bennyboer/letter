@@ -18,7 +18,8 @@ pub enum DocumentNodeValue {
     ListItem,
     Table,
     Break,
-    // TODO Header, Footer elements
+    Bold,
+    Italic, // TODO Header, Footer elements
 }
 
 impl Display for DocumentNodeValue {

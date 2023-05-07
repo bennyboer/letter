@@ -621,6 +621,7 @@ dependencies = [
  "document",
  "font",
  "log",
+ "paragraph-breaker",
  "typeset",
  "unit",
  "uuid",
@@ -761,6 +762,12 @@ checksum = "60ac8dda2e5cc09bf6480e3b3feff9783db251710c922ae9369a429c51efdeb0"
 dependencies = [
  "ttf-parser",
 ]
+
+[[package]]
+name = "paragraph-breaker"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df3365bc53d974e212e903f93bb377be189c8f9ae3409fbbb60e5f284dfd73d3"
 
 [[package]]
 name = "pathfinder_geometry"

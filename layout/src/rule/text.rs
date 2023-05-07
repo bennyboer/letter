@@ -1,3 +1,5 @@
+// TODO This module can be removed when InlineLayoutRule is finished
+
 use document::structure::{DocumentNode, DocumentNodeValue};
 use document::style::FontVariationSettings;
 use document::Document;
@@ -44,9 +46,6 @@ fn layout_text(
     let style = ctx.current_style();
     let size = style.size();
 
-    // Using the trivial line breaking algorithm to typeset the text (to be replaced by a better alternative)
-    // TODO: Use the Knuth-Plass Algorithm to typeset the text block -> Convert to Box-Glue-Model first
-    // TODO Get the line width per line separately - configurable!
     let line_width = if size.width < bounds.size().width {
         size.width
     } else {
@@ -56,6 +55,7 @@ fn layout_text(
     let font_size = *style.font_size();
     let font_family = style.font_family().clone();
     let font_variation_settings = style.font_variation_settings().clone();
+
     let font_id = ctx.find_font(&font_family).ok_or(format!(
         "Could not find font for font-family: {:?}",
         font_family

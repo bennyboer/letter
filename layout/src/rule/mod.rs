@@ -1,10 +1,12 @@
 use document::structure::DocumentNode;
 use document::Document;
+pub(crate) use inline::InlineLayoutRule;
 pub(crate) use text::TextLayoutRule;
 
 use crate::context::LayoutContext;
 use crate::result::LayoutResult;
 
+mod inline;
 mod text;
 
 /// A rule for laying out a document structure node on a page.

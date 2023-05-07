@@ -232,6 +232,8 @@ fn to_node_value(
             width: None,
             height: None,
         },
+        "bold" | "b" => DocumentNodeValue::Bold,
+        "italic" | "i" => DocumentNodeValue::Italic,
         _ => Err(format!(
             "Node with name '{}' at '{}:{}' is currently not supported.",
             name, source_position.line, source_position.column

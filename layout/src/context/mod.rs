@@ -1,14 +1,17 @@
 use std::collections::HashMap;
 
-use document::style::FontFamilySource;
+use document::structure::DocumentNode;
+use document::style::{FontFamilySource, NodeName, Style};
+use document::Document;
 use font::{FontId, FontManager, LetterFont};
 
 pub(crate) use crate::context::insets::Insets;
 pub(crate) use crate::context::page_sizing::{OneSizeFitsAllPageSizing, PageSizing};
 pub(crate) use crate::context::style::LayoutStyle;
 use crate::element::{
-    Bounds, DocumentLayout, ElementId, LayoutConstraints, LayoutElement, Page, Position,
+    Bounds, DocumentLayout, ElementId, LayoutConstraints, LayoutElement, Page, Position, Size,
 };
+use crate::result::LayoutResult;
 
 mod insets;
 mod page_sizing;
@@ -137,6 +140,85 @@ impl<'a> LayoutContext<'a> {
 
     pub(crate) fn get_font_mut(&mut self, id: &FontId) -> &mut LetterFont<'a> {
         self.font_manager.get_font_mut(id).unwrap()
+    }
+
+    pub(crate) fn push_node_styles(
+        &mut self,
+        node: &DocumentNode,
+        document: &Document,
+    ) -> LayoutResult<()> {
+        let node_name: Option<NodeName> = node.name().map(|name| name.into());
+        let current_style = self.current_style().clone();
+        if let Some(node_name) = node_name {
+            let class_name = node.class_name();
+            let styles = document.styles.resolve(&node_name, class_name);
+            let layout_style = self.apply_to_layout_style(current_style, &styles);
+
+            self.push_style(layout_style);
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn pop_node_styles(&mut self, node: &DocumentNode) -> LayoutResult<()> {
+        if node.name().is_some() {
+            self.pop_style();
+        }
+
+        Ok(())
+    }
+
+    fn apply_to_layout_style(
+        &self,
+        mut layout_style: LayoutStyle,
+        styles: &Vec<&Style>,
+    ) -> LayoutStyle {
+        // Size, margin and padding are not inherited
+        layout_style.set_size(Size::max());
+        layout_style.set_margin(Insets::zero());
+        layout_style.set_padding(Insets::zero());
+
+        for style in styles {
+            match style {
+                Style::Width(distance) => {
+                    layout_style.set_size(layout_style.size().with_width(*distance))
+                }
+                Style::Height(distance) => {
+                    layout_style.set_size(layout_style.size().with_height(*distance))
+                }
+                Style::MarginTop(distance) => {
+                    layout_style.set_margin(layout_style.margin().with_top(*distance))
+                }
+                Style::MarginRight(distance) => {
+                    layout_style.set_margin(layout_style.margin().with_right(*distance))
+                }
+                Style::MarginBottom(distance) => {
+                    layout_style.set_margin(layout_style.margin().with_bottom(*distance))
+                }
+                Style::MarginLeft(distance) => {
+                    layout_style.set_margin(layout_style.margin().with_left(*distance))
+                }
+                Style::PaddingTop(distance) => {
+                    layout_style.set_padding(layout_style.padding().with_top(*distance))
+                }
+                Style::PaddingRight(distance) => {
+                    layout_style.set_padding(layout_style.padding().with_right(*distance))
+                }
+                Style::PaddingBottom(distance) => {
+                    layout_style.set_padding(layout_style.padding().with_bottom(*distance))
+                }
+                Style::PaddingLeft(distance) => {
+                    layout_style.set_padding(layout_style.padding().with_left(*distance))
+                }
+                Style::FontSize(distance) => layout_style.set_font_size(*distance),
+                Style::FontFamily(font_family) => layout_style.set_font_family(font_family.clone()),
+                Style::FontVariationSettings(settings) => {
+                    layout_style.set_font_variation_settings(settings.clone())
+                }
+            };
+        }
+
+        layout_style
     }
 
     fn current_page(&mut self) -> &mut Page {

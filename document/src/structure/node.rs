@@ -39,6 +39,10 @@ impl DocumentNode {
         self.name.as_deref()
     }
 
+    pub fn value(&self) -> &DocumentNodeValue {
+        &self.value
+    }
+
     pub fn add_child(&mut self, child: NodeId) {
         self.children.push(child);
     }

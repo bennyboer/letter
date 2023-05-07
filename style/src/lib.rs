@@ -335,16 +335,10 @@ fn parse_selectable(pairs: Pairs<Rule>) -> StyleParseResult<Selectable> {
     for pair in pairs {
         match pair.as_rule() {
             Rule::NodeName => {
-                node_name = Some(pair.as_str().to_owned());
+                node_name = Some(pair.as_str().trim().to_owned());
             }
             Rule::ClassName => {
-                class_name = Some(
-                    pair.as_str()
-                        .to_owned()
-                        .strip_prefix(".")
-                        .unwrap()
-                        .to_owned(),
-                );
+                class_name = Some(pair.as_str().trim().strip_prefix(".").unwrap().to_owned());
             }
             _ => unreachable!(),
         }

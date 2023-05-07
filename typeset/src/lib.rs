@@ -15,7 +15,7 @@ mod tests {
         let units_per_em = font_face.upem() as usize;
         let font = Font::new(font_face);
 
-        let result = harfbuzz_rs::subset(&font);
-        println!("{:?}", result);
+        // let result = harfbuzz_rs::subset(&font);
+        // println!("{:?}", result);
     }
 }

@@ -52,6 +52,7 @@ impl StyleResolver {
             node_name: node_name.to_owned(),
             class_name: None,
         };
+
         if let Some(styles) = self.lookup.get(&key) {
             result.extend(styles);
         }
