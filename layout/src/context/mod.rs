@@ -134,10 +134,6 @@ impl<'a> LayoutContext<'a> {
         }
     }
 
-    pub(crate) fn get_font(&self, id: &FontId) -> &LetterFont {
-        self.font_manager.get_font(id).unwrap()
-    }
-
     pub(crate) fn get_font_mut(&mut self, id: &FontId) -> &mut LetterFont<'a> {
         self.font_manager.get_font_mut(id).unwrap()
     }

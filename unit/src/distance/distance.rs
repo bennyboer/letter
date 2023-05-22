@@ -1,3 +1,4 @@
+use std::iter::Sum;
 use std::{fmt::Display, ops};
 
 use crate::UnitValue;
@@ -149,6 +150,18 @@ impl PartialOrd for Distance {
         } else {
             return Some(std::cmp::Ordering::Greater);
         }
+    }
+}
+
+impl Sum for Distance {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        let mut sum = Distance::zero();
+
+        for item in iter {
+            sum += item;
+        }
+
+        sum
     }
 }
 

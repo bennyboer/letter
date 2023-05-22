@@ -1,17 +1,22 @@
 //! Module responsible for transforming a Letter document node and its children into a box-glue-model
 //! that can be used by the Knuth-Plass line breaking algorithm.
 
-use document::structure::{DocumentNode, DocumentNodeValue};
+use hypher::{hyphenate, Lang};
+
+use document::structure::{DocumentNode, DocumentNodeValue, NodeId};
 use document::style::FontVariationSettings;
 use document::Document;
 use font::{FontId, FontVariationId, LetterFont, LetterFontVariation};
-use typeset::glyph_shaping::{shape_text, GlyphDetails};
-use unit::Distance;
+use typeset::glyph_shaping::shape_text;
+use unit::{Distance, DistanceUnit};
 use DocumentNodeValue::{Bold, Italic, Text};
 
 use crate::context::LayoutContext;
 use crate::result::LayoutResult;
-use crate::rule::inline::item::{BoxContent, BoxItem, Item};
+use crate::rule::inline::item::{BoxContent, BoxItem, GlueItem, Item, PenaltyItem};
+
+const HYPHEN_PENALTY: i32 = 50;
+const INFINITE_PENALTY: i32 = 10000;
 
 pub(crate) fn to_box_glue_model(
     node: &DocumentNode,
@@ -26,7 +31,22 @@ pub(crate) fn to_box_glue_model(
         }
     }
 
+    finalize_paragraph(&mut items);
+
     Ok(items)
+}
+
+fn finalize_paragraph(result: &mut Vec<Item>) {
+    result.push(Item::Glue(GlueItem::new(
+        Distance::zero(),
+        Distance::new(INFINITE_PENALTY as f64, DistanceUnit::Meter),
+        Distance::zero(),
+    )));
+    result.push(Item::Penalty(PenaltyItem::new(
+        Distance::zero(),
+        -INFINITE_PENALTY,
+        true,
+    )));
 }
 
 fn process_node(
@@ -78,14 +98,7 @@ fn map_text_node_to_item(
 ) -> LayoutResult<bool> {
     let font_ctx = setup_font(ctx)?;
 
-    let parts = split_text_into_parts(text);
-
-    for part in parts {
-        let width = calculate_text_width(&part, &font_ctx, ctx)?;
-        let text_content = BoxContent::Text(part);
-        let item = Item::Box(BoxItem::new(width, text_content, node.id));
-        result.push(item);
-    }
+    split_text_into_parts_and_map_to_items(text, node.id, ctx, font_ctx, result)?;
 
     Ok(true)
 }
@@ -105,9 +118,132 @@ fn setup_font(ctx: &mut LayoutContext) -> LayoutResult<FontContext> {
     Ok(FontContext::new(font_id, font_variation_id, font_size))
 }
 
-fn split_text_into_parts(text: &str) -> Vec<String> {
-    // TODO Support hyphenation
-    text.split(' ').map(|part| part.to_string()).collect()
+fn glue_after(
+    _node_id: NodeId,
+    _ctx: &mut LayoutContext,
+    font_ctx: &FontContext,
+    _last_char: char,
+    white_space_width: Distance,
+) -> Item {
+    let font_size = font_ctx.font_size;
+
+    Item::Glue(GlueItem::new(
+        white_space_width,
+        font_size / 6.0,
+        font_size / 9.0,
+    ))
+}
+
+fn split_text_into_parts_and_map_to_items(
+    text: &str,
+    node_id: NodeId,
+    ctx: &mut LayoutContext,
+    font_ctx: FontContext,
+    result: &mut Vec<Item>,
+) -> LayoutResult<()> {
+    let mut buf = String::new();
+    let mut last_char = '*';
+    let white_space_width = calculate_text_width(" ", &font_ctx, ctx)?;
+    let minus_char_width = calculate_text_width("-", &font_ctx, ctx)?;
+    let style = ctx.current_style().clone();
+
+    for c in text.chars() {
+        if "- ".find(c).is_some() {
+            if !buf.is_empty() {
+                split_word_into_syllables_and_map_to_items(
+                    &buf.trim(),
+                    node_id,
+                    ctx,
+                    &font_ctx,
+                    minus_char_width,
+                    result,
+                )?;
+                buf.clear();
+            }
+        }
+
+        match c {
+            ' ' | '\n' => {
+                if let Some(item) = result.last() {
+                    if let Item::Glue(_) = item {
+                        continue;
+                    }
+                }
+
+                result.push(glue_after(
+                    node_id,
+                    ctx,
+                    &font_ctx,
+                    last_char,
+                    white_space_width,
+                ))
+            }
+            '-' => {
+                result.push(Item::Box(BoxItem::new(
+                    minus_char_width,
+                    BoxContent::Text(c.to_string()),
+                    node_id,
+                    style.clone(),
+                )));
+                result.push(Item::Penalty(PenaltyItem::new(
+                    Distance::zero(),
+                    HYPHEN_PENALTY,
+                    true,
+                )));
+            }
+            _ => {
+                buf.push(c);
+            }
+        }
+
+        last_char = c;
+    }
+
+    if !buf.is_empty() {
+        split_word_into_syllables_and_map_to_items(
+            &buf.trim(),
+            node_id,
+            ctx,
+            &font_ctx,
+            minus_char_width,
+            result,
+        )?;
+    }
+
+    Ok(())
+}
+
+fn split_word_into_syllables_and_map_to_items(
+    word: &str,
+    node_id: NodeId,
+    ctx: &mut LayoutContext,
+    font_ctx: &FontContext,
+    minus_char_width: Distance,
+    result: &mut Vec<Item>,
+) -> LayoutResult<()> {
+    let style = ctx.current_style().clone();
+    let lang = Lang::English;
+    let syllables: Vec<&str> = hyphenate(word, lang).collect();
+    let syllable_count = syllables.len();
+    for (idx, syllable) in syllables.into_iter().enumerate() {
+        let width = calculate_text_width(&syllable, font_ctx, ctx)?;
+        result.push(Item::Box(BoxItem::new(
+            width,
+            BoxContent::Text(syllable.to_owned()),
+            node_id,
+            style.clone(),
+        )));
+
+        if idx < syllable_count - 1 {
+            result.push(Item::Penalty(PenaltyItem::new(
+                minus_char_width,
+                HYPHEN_PENALTY,
+                true,
+            )));
+        }
+    }
+
+    Ok(())
 }
 
 fn calculate_text_width(
@@ -117,8 +253,6 @@ fn calculate_text_width(
 ) -> LayoutResult<Distance> {
     let font = ctx.get_font_mut(&font_ctx.font_id);
     let result = shape_text(text, font_ctx.font_size, font)?;
-
-    mark_codepoints_as_used(font, &result.glyphs); // TODO This might be better suited in the real layout step. We are in a transformer here.
 
     Ok(result.width)
 }
@@ -133,13 +267,6 @@ fn initialize_font_variations(
         .map(|v| LetterFontVariation::new(v.name.to_owned(), v.value))
         .collect();
     return font.set_variations(&variations);
-}
-
-fn mark_codepoints_as_used(font: &mut LetterFont, glyphs: &Vec<GlyphDetails>) {
-    for glyph in glyphs {
-        let codepoint = glyph.codepoint;
-        font.mark_codepoint_as_used(codepoint);
-    }
 }
 
 struct FontContext {

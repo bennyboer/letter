@@ -4,7 +4,7 @@ use unit::{Distance, DistanceUnit};
 use crate::context::insets::Insets;
 use crate::element::Size;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct LayoutStyle {
     size: Size,
     margin: Insets,
@@ -45,7 +45,7 @@ impl LayoutStyle {
     pub fn font_family(&self) -> &FontFamilySource {
         &self.font_family
     }
-    
+
     pub fn font_variation_settings(&self) -> &FontVariationSettings {
         &self.font_variation_settings
     }
@@ -69,7 +69,7 @@ impl LayoutStyle {
     pub fn set_font_family(&mut self, family: FontFamilySource) {
         self.font_family = family;
     }
-    
+
     pub fn set_font_variation_settings(&mut self, settings: FontVariationSettings) {
         self.font_variation_settings = settings;
     }

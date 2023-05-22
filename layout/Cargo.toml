@@ -9,6 +9,7 @@ font = { path = "../font" }
 document = { path = "../document" }
 typeset = { path = "../typeset" }
 paragraph-breaker = "0.4.4"
+hypher = "0.1"
 log = "0.4.17"
 
 [dependencies.uuid]

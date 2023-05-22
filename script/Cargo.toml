@@ -6,4 +6,4 @@ edition = "2021"
 [dependencies]
 document = { path = "../document" }
 log = "0.4.17"
-quick-xml = "0.27.1"
+quick-xml = "0.28.2"

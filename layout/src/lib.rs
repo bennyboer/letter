@@ -1,16 +1,16 @@
 extern crate core;
 
 use document::structure::{DocumentNode, DocumentNodeValue};
-use document::style::{NodeName, Style};
+use document::style::Style;
 use document::Document;
 use unit::{Distance, DistanceUnit};
 use DocumentNodeValue::{Heading, ListItem, Paragraph, Text};
 
-use crate::context::{Insets, LayoutContext, LayoutStyle, OneSizeFitsAllPageSizing, PageSizing};
+use crate::context::{LayoutContext, OneSizeFitsAllPageSizing, PageSizing};
 use crate::element::{DocumentLayout, LayoutConstraints, Size};
 use crate::options::LayoutOptions;
 use crate::result::LayoutResult;
-use crate::rule::{InlineLayoutRule, LayoutRule, TextLayoutRule};
+use crate::rule::{InlineLayoutRule, LayoutRule};
 
 mod context;
 pub mod element;

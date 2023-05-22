@@ -1,6 +1,6 @@
 use unit::Distance;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Size {
     pub width: Distance,
     pub height: Distance,

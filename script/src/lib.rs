@@ -35,7 +35,7 @@ pub fn parse_document_structure(src: &str) -> ParseResult<DocumentStructure> {
         .push(context.document_structure.root().id);
 
     let mut reader = Reader::from_str(src); // TODO Read from file instead for better performance?
-    reader.trim_text(true);
+    reader.trim_text(false);
 
     let mut buffer = Vec::new();
     loop {
@@ -94,6 +94,10 @@ fn handle_event(
 }
 
 fn push_text_node(text: String, offset: usize, context: &mut ParseContext) -> ParseResult<()> {
+    if text.trim().is_empty() {
+        return Ok(());
+    }
+
     let node = to_text_node(text, offset, context);
     insert_node(node, context);
 
