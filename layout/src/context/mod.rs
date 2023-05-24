@@ -211,6 +211,7 @@ impl<'a> LayoutContext<'a> {
                 Style::FontVariationSettings(settings) => {
                     layout_style.set_font_variation_settings(settings.clone())
                 }
+                Style::LineHeight(line_height) => layout_style.set_line_height(*line_height),
             };
         }
 

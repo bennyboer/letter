@@ -80,4 +80,6 @@ pub enum Style {
     FontSize(Distance),
     FontFamily(FontFamilySource),
     FontVariationSettings(FontVariationSettings),
+
+    LineHeight(f64),
 }

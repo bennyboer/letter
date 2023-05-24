@@ -12,6 +12,7 @@ pub(crate) struct LayoutStyle {
     font_size: Distance,
     font_family: FontFamilySource,
     font_variation_settings: FontVariationSettings,
+    line_height: f64,
 }
 
 impl LayoutStyle {
@@ -23,6 +24,7 @@ impl LayoutStyle {
             font_size: Distance::new(12.0, DistanceUnit::Points),
             font_family: FontFamilySource::Default,
             font_variation_settings: FontVariationSettings { variations: vec![] },
+            line_height: 1.25,
         }
     }
 
@@ -50,6 +52,10 @@ impl LayoutStyle {
         &self.font_variation_settings
     }
 
+    pub fn line_height(&self) -> f64 {
+        self.line_height
+    }
+
     pub fn set_size(&mut self, size: Size) {
         self.size = size;
     }
@@ -72,5 +78,9 @@ impl LayoutStyle {
 
     pub fn set_font_variation_settings(&mut self, settings: FontVariationSettings) {
         self.font_variation_settings = settings;
+    }
+
+    pub fn set_line_height(&mut self, line_height: f64) {
+        self.line_height = line_height;
     }
 }

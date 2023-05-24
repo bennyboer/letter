@@ -56,7 +56,8 @@ fn layout_lines(lines: Lines, line_width: Distance, ctx: &mut LayoutContext) -> 
     let style = ctx.current_style().clone();
 
     let font_size = *style.font_size();
-    let line_height = font_size * 1.2; // TODO Make configurable
+    let line_height = style.line_height();
+    let line_height = font_size * line_height;
 
     if line_height > bounds.size().height {
         bounds = ctx.choose_next_bounds();

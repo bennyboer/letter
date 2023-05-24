@@ -115,7 +115,21 @@ fn parse_styles_from_value(
         "margin" => parse_margin_styles(parse_unnamed_block_to_map(pairs)?, result)?,
         "padding" => parse_padding_styles(parse_unnamed_block_to_map(pairs)?, result)?,
         "font" => parse_font_styles(parse_unnamed_block_to_map(pairs)?, result)?,
+        "line-height" => parse_line_height(pairs, result)?,
         _ => Err(format!("Property with key '{}' is currently not supported", key).to_owned())?,
+    }
+
+    Ok(())
+}
+
+fn parse_line_height(pairs: Pairs<Rule>, result: &mut Vec<Style>) -> StyleParseResult<()> {
+    for pair in pairs {
+        if let Rule::SimpleValue = pair.as_rule() {
+            let value = pair.as_str().strip_suffix(";").unwrap_or(pair.as_str());
+            let number = value.parse::<f64>()?;
+
+            result.push(Style::LineHeight(number));
+        }
     }
 
     Ok(())
