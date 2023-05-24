@@ -148,7 +148,7 @@ fn split_text_into_parts_and_map_to_items(
     let style = ctx.current_style().clone();
 
     for c in text.chars() {
-        if "- ".find(c).is_some() {
+        if "- \n".find(c).is_some() {
             if !buf.is_empty() {
                 split_word_into_syllables_and_map_to_items(
                     &buf.trim(),
@@ -163,6 +163,7 @@ fn split_text_into_parts_and_map_to_items(
         }
 
         match c {
+            '\r' => {}
             ' ' | '\n' => {
                 if let Some(item) = result.last() {
                     if let Item::Glue(_) = item {
