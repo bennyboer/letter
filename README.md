@@ -2,6 +2,10 @@
 
 > This is the successor of the [Thaw prototype](https://github.com/bennyboer/thaw) to be written in Rust
 
+## Development Progress
+
+A "Walking skeleton" is currently being developed. Check out the project page for an overview: https://github.com/bennyboer/letter/projects/2
+
 ## Idea
 
 A document essentially is a hierarchical structure of data with common elements like headlines, paragraphs, images, tables, and so on.
