@@ -78,11 +78,10 @@ fn layout_lines(lines: Lines, line_width: Distance, ctx: &mut LayoutContext) -> 
 
         layout_line(line, &mut position_ctx, alignment, ctx)?;
 
-        // Break line
-        {
+        if !is_last_line {
             position_ctx.y_offset += line_height;
 
-            let no_more_space_on_page = position_ctx.y_offset > bounds.size().height;
+            let no_more_space_on_page = position_ctx.y_offset > position_ctx.bounds.size().height;
             if no_more_space_on_page {
                 position_ctx.bounds = ctx.choose_next_bounds();
                 position_ctx.y_offset = Distance::zero();
