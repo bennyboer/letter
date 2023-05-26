@@ -115,24 +115,35 @@ fn parse_styles_from_value(
         "margin" => parse_margin_styles(parse_unnamed_block_to_map(pairs)?, result)?,
         "padding" => parse_padding_styles(parse_unnamed_block_to_map(pairs)?, result)?,
         "font" => parse_font_styles(parse_unnamed_block_to_map(pairs)?, result)?,
-        "line-height" => parse_line_height(pairs, result)?,
+        "inline" => parse_inline_styles(parse_unnamed_block_to_map(pairs)?, result)?,
         _ => Err(format!("Property with key '{}' is currently not supported", key).to_owned())?,
     }
 
     Ok(())
 }
 
-fn parse_line_height(pairs: Pairs<Rule>, result: &mut Vec<Style>) -> StyleParseResult<()> {
-    for pair in pairs {
-        if let Rule::SimpleValue = pair.as_rule() {
-            let value = pair.as_str().strip_suffix(";").unwrap_or(pair.as_str());
-            let number = value.parse::<f64>()?;
-
-            result.push(Style::LineHeight(number));
-        }
+fn parse_inline_styles(
+    properties: HashMap<String, String>,
+    result: &mut Vec<Style>,
+) -> StyleParseResult<()> {
+    if properties.contains_key("line-height") {
+        let number = parse_number_property(&properties, "line-height")?;
+        result.push(Style::LineHeight(number));
     }
 
     Ok(())
+}
+
+fn parse_number_property(properties: &HashMap<String, String>, key: &str) -> StyleParseResult<f64> {
+    if let Some(value) = properties.get(key) {
+        let number = value.parse::<f64>()?;
+
+        return Ok(number);
+    }
+
+    Err(format!("No value for property '{}' defined", key)
+        .to_owned()
+        .into())
 }
 
 fn parse_unnamed_block_to_map(pairs: Pairs<Rule>) -> StyleParseResult<HashMap<String, String>> {

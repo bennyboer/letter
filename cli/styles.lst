@@ -62,7 +62,6 @@ paragraph {
   margin: {
     bottom: 2mm;
   }
-  line-height: 1.5;
 }
 
 paragraph.special {
