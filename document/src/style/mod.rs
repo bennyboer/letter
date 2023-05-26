@@ -3,6 +3,7 @@ use std::collections::HashMap;
 pub use font_family::FontFamilySource;
 pub use font_variation_settings::{FontVariation, FontVariationSettings};
 use unit::Distance;
+use unit::DistanceUnit::{Centimeter, Millimeter, Points};
 
 pub use crate::style::class::ClassName;
 pub use crate::style::definition::StyleDefinition;
@@ -28,11 +29,15 @@ pub struct DocumentStyles {
 
 impl DocumentStyles {
     pub fn new() -> Self {
-        Self {
+        let mut result = Self {
             styles: HashMap::new(),
             resolver: StyleResolver::new(),
             style_id_counter: 0,
-        }
+        };
+
+        fill_default_styles(&mut result);
+
+        result
     }
 
     pub fn root_style(&self) -> Vec<&Style> {
@@ -60,6 +65,25 @@ impl DocumentStyles {
         self.styles.insert(id, style_definition);
         self.resolver.register_style(node_name, class_name, id);
     }
+}
+
+fn fill_default_styles(styles: &mut DocumentStyles) {
+    styles.register_style_definition(
+        &ROOT_NODE_NAME.into(),
+        None,
+        StyleDefinition {
+            styles: vec![
+                Style::FontSize(Distance::new(12.0, Points)),
+                Style::LineHeight(1.25),
+                Style::MarginTop(Distance::new(2.0, Centimeter)),
+                Style::MarginBottom(Distance::new(2.0, Centimeter)),
+                Style::MarginLeft(Distance::new(2.0, Centimeter)),
+                Style::MarginRight(Distance::new(2.0, Centimeter)),
+                Style::Width(Distance::new(210.0, Millimeter)),
+                Style::Height(Distance::new(297.0, Millimeter)),
+            ],
+        },
+    );
 }
 
 #[derive(Clone, Debug)]

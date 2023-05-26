@@ -1,16 +1,3 @@
-document {
-  size: {
-    width: 210mm;
-    height: 297mm;
-  }
-  margin: {
-    top: 2cm;
-    bottom: 2cm;
-    left: 2cm;
-    right: 2cm;
-  }
-}
-
 b {
   font: {
     variation-settings: "wght" 500;
