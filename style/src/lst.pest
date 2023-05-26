@@ -4,9 +4,12 @@ Block = { Selector ~ UnnamedBlock }
 UnnamedBlock = { "{" ~ ( KeyValuePair )* ~ "}" }
 
 Selector = { Selectable ~ ( "," ~ Selectable )* }
-Selectable = { NodeName ~ ClassName? }
+Selectable = { NodeName ~ ClassName? ~ PseudoClass? }
 NodeName = { ALPHABETIC+ }
 ClassName = { "." ~ ALPHABETIC+ }
+PseudoClass = { ":" ~ PseudoClassName ~ "(" ~ PseudoClassArguments? ~ ")" }
+PseudoClassName = { ALPHABETIC+ }
+PseudoClassArguments = { (TextCharacter | NumberCharacter | "," | "-" | "*" | "." )+ }
 
 KeyValuePair = { Key ~ ":" ~ Value }
 Key = { (TextCharacter | "-")+ }

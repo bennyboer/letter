@@ -4,12 +4,12 @@ extern crate pest_derive;
 
 use std::collections::HashMap;
 
-use pest::iterators::Pairs;
+use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 
 use document::style::{
     ClassName, DocumentStyles, FontFamilySource, FontVariation, FontVariationSettings, NodeName,
-    Style, StyleDefinition,
+    PseudoClass, Style, StyleDefinition,
 };
 use unit::{Distance, DistanceUnit};
 
@@ -59,6 +59,7 @@ fn parse_block(pairs: Pairs<Rule>, styles: &mut DocumentStyles) -> StyleParseRes
                         styles.register_style_definition(
                             &selectable.node_name,
                             selectable.class_name.as_ref(),
+                            selectable.pseudo_class.clone(),
                             style_definition.clone(),
                         );
                     }
@@ -356,6 +357,7 @@ fn parse_selector(pairs: Pairs<Rule>) -> StyleParseResult<Selector> {
 fn parse_selectable(pairs: Pairs<Rule>) -> StyleParseResult<Selectable> {
     let mut node_name = None;
     let mut class_name = None;
+    let mut pseudo_class = None;
 
     for pair in pairs {
         match pair.as_rule() {
@@ -365,6 +367,9 @@ fn parse_selectable(pairs: Pairs<Rule>) -> StyleParseResult<Selectable> {
             Rule::ClassName => {
                 class_name = Some(pair.as_str().trim().strip_prefix(".").unwrap().to_owned());
             }
+            Rule::PseudoClass => {
+                pseudo_class = Some(parse_pseudo_class(pair)?);
+            }
             _ => unreachable!(),
         }
     }
@@ -372,7 +377,36 @@ fn parse_selectable(pairs: Pairs<Rule>) -> StyleParseResult<Selectable> {
     Ok(Selectable {
         node_name: node_name.ok_or("Node name is required")?,
         class_name,
+        pseudo_class,
     })
+}
+
+fn parse_pseudo_class(pair: Pair<Rule>) -> StyleParseResult<PseudoClass> {
+    let mut name = None;
+    let mut arguments = None;
+
+    for pair in pair.into_inner() {
+        match pair.as_rule() {
+            Rule::PseudoClassName => {
+                name = Some(pair.as_str().trim().to_owned());
+            }
+            Rule::PseudoClassArguments => {
+                arguments = Some(pair.as_str().trim().to_owned());
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    let name = name.unwrap().to_lowercase();
+    match name.as_str() {
+        "level" => {
+            let level = arguments
+                .ok_or("Level pseudo class requires an argument")?
+                .parse::<usize>()?;
+            Ok(PseudoClass::Level(level))
+        }
+        _ => Err(format!("Unknown pseudo class '{}'", name).into()),
+    }
 }
 
 // TODO Extract structs and types into separate files in an parser module
@@ -386,4 +420,5 @@ struct Selector {
 struct Selectable {
     node_name: NodeName,
     class_name: Option<ClassName>,
+    pseudo_class: Option<PseudoClass>,
 }

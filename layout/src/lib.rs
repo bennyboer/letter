@@ -1,5 +1,6 @@
 extern crate core;
 
+use document::structure::DocumentNodeValue::Section;
 use document::structure::{DocumentNode, DocumentNodeValue};
 use document::style::Style;
 use document::Document;
@@ -10,7 +11,7 @@ use crate::context::{LayoutContext, OneSizeFitsAllPageSizing, PageSizing};
 use crate::element::{DocumentLayout, LayoutConstraints, Size};
 use crate::options::LayoutOptions;
 use crate::result::LayoutResult;
-use crate::rule::{InlineLayoutRule, LayoutRule};
+use crate::rule::{InlineLayoutRule, LayoutRule, SectionLayoutRule};
 
 mod context;
 pub mod element;
@@ -68,7 +69,13 @@ fn process_node(
 
     ctx.push_node_styles(node, document)?;
     {
-        let is_consumed = layout_node_using_rule(node, document, ctx)?;
+        let rule = map_node_to_rule(node);
+        let is_consumed = if let Some(rule) = rule.as_ref() {
+            rule.layout(node, document, ctx)?;
+            rule.is_consuming()
+        } else {
+            false
+        };
 
         if !is_consumed {
             let node_ids = node.children();
@@ -78,29 +85,20 @@ fn process_node(
                 }
             }
         }
+
+        if let Some(rule) = rule {
+            rule.after_layout(node, document, ctx)?;
+        }
     }
     ctx.pop_node_styles(node)?;
 
     Ok(())
 }
 
-fn layout_node_using_rule(
-    node: &DocumentNode,
-    document: &Document,
-    ctx: &mut LayoutContext,
-) -> LayoutResult<bool> {
-    let rule = map_node_to_rule(node);
-    if let Some(rule) = rule {
-        rule.layout(node, document, ctx)?;
-        return Ok(true);
-    }
-
-    Ok(false)
-}
-
 fn map_node_to_rule(node: &DocumentNode) -> Option<Box<dyn LayoutRule>> {
     match node.value {
         Text(_) | Paragraph | Heading | ListItem => Some(Box::new(InlineLayoutRule::new())),
+        Section => Some(Box::new(SectionLayoutRule::new())),
         _ => None,
     }
 }
@@ -115,7 +113,7 @@ fn create_page_sizing_behavior(document: &Document) -> Box<dyn PageSizing> {
 
 fn get_root_layout_constraints(document: &Document) -> LayoutConstraints {
     let document_styles = &document.styles;
-    let styles = document_styles.resolve(&"document".into(), None);
+    let styles = document_styles.root_style();
     let mut width = Distance::new(210.0, DistanceUnit::Millimeter);
     let mut height = Distance::new(297.0, DistanceUnit::Millimeter);
 

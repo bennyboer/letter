@@ -9,7 +9,9 @@ pub use crate::style::class::ClassName;
 pub use crate::style::definition::StyleDefinition;
 use crate::style::id::StyleId;
 pub use crate::style::node::NodeName;
+pub use crate::style::pseudo_class::PseudoClass;
 use crate::style::resolver::StyleResolver;
+pub use crate::style::resolver::StyleResolvingContext;
 
 mod class;
 mod definition;
@@ -17,9 +19,11 @@ mod font_family;
 mod font_variation_settings;
 mod id;
 mod node;
+mod pseudo_class;
 mod resolver;
 
 const ROOT_NODE_NAME: &'static str = "document";
+const HEADING_NODE_NAME: &'static str = "heading";
 
 pub struct DocumentStyles {
     styles: HashMap<StyleId, StyleDefinition>,
@@ -41,11 +45,20 @@ impl DocumentStyles {
     }
 
     pub fn root_style(&self) -> Vec<&Style> {
-        self.resolve(&ROOT_NODE_NAME.into(), None)
+        self.resolve(
+            &ROOT_NODE_NAME.into(),
+            None,
+            StyleResolvingContext::default(),
+        )
     }
 
-    pub fn resolve(&self, node_name: &NodeName, class_name: Option<&ClassName>) -> Vec<&Style> {
-        let style_ids = self.resolver.resolve(node_name, class_name);
+    pub fn resolve(
+        &self,
+        node_name: &NodeName,
+        class_name: Option<&ClassName>,
+        ctx: StyleResolvingContext,
+    ) -> Vec<&Style> {
+        let style_ids = self.resolver.resolve(node_name, class_name, ctx);
         style_ids
             .iter()
             .filter_map(|style_id| self.styles.get(style_id))
@@ -57,19 +70,22 @@ impl DocumentStyles {
         &mut self,
         node_name: &NodeName,
         class_name: Option<&ClassName>,
+        pseudo_class: Option<PseudoClass>,
         style_definition: StyleDefinition,
     ) {
         let id = self.style_id_counter;
         self.style_id_counter += 1;
 
         self.styles.insert(id, style_definition);
-        self.resolver.register_style(node_name, class_name, id);
+        self.resolver
+            .register_style(node_name, class_name, pseudo_class, id);
     }
 }
 
 fn fill_default_styles(styles: &mut DocumentStyles) {
     styles.register_style_definition(
         &ROOT_NODE_NAME.into(),
+        None,
         None,
         StyleDefinition {
             styles: vec![
@@ -84,6 +100,75 @@ fn fill_default_styles(styles: &mut DocumentStyles) {
             ],
         },
     );
+
+    fill_default_heading_styles(styles);
+}
+
+fn fill_default_heading_styles(styles: &mut DocumentStyles) {
+    struct HeadingSettings {
+        font_size: Distance,
+        margin_top: Distance,
+        margin_bottom: Distance,
+    }
+    let fallback_heading_settings = HeadingSettings {
+        font_size: Distance::new(14.0, Points),
+        margin_top: Distance::new(3.0, Millimeter),
+        margin_bottom: Distance::new(2.0, Millimeter),
+    };
+    styles.register_style_definition(
+        &HEADING_NODE_NAME.into(),
+        None,
+        None,
+        StyleDefinition {
+            styles: vec![
+                Style::FontSize(fallback_heading_settings.font_size),
+                Style::MarginTop(fallback_heading_settings.margin_top),
+                Style::MarginBottom(fallback_heading_settings.margin_bottom),
+            ],
+        },
+    );
+
+    let heading_settings_per_level = [
+        HeadingSettings {
+            font_size: Distance::new(48.0, Points),
+            margin_top: Distance::new(0.0, Millimeter),
+            margin_bottom: Distance::new(10.0, Millimeter),
+        },
+        HeadingSettings {
+            font_size: Distance::new(32.0, Points),
+            margin_top: Distance::new(5.0, Millimeter),
+            margin_bottom: Distance::new(5.0, Millimeter),
+        },
+        HeadingSettings {
+            font_size: Distance::new(24.0, Points),
+            margin_top: Distance::new(5.0, Millimeter),
+            margin_bottom: Distance::new(4.0, Millimeter),
+        },
+        HeadingSettings {
+            font_size: Distance::new(20.0, Points),
+            margin_top: Distance::new(5.0, Millimeter),
+            margin_bottom: Distance::new(4.0, Millimeter),
+        },
+        HeadingSettings {
+            font_size: Distance::new(16.0, Points),
+            margin_top: Distance::new(4.0, Millimeter),
+            margin_bottom: Distance::new(3.0, Millimeter),
+        },
+    ];
+    for (level, settings) in heading_settings_per_level.into_iter().enumerate() {
+        styles.register_style_definition(
+            &HEADING_NODE_NAME.into(),
+            None,
+            Some(PseudoClass::Level(level)),
+            StyleDefinition {
+                styles: vec![
+                    Style::FontSize(settings.font_size),
+                    Style::MarginTop(settings.margin_top),
+                    Style::MarginBottom(settings.margin_bottom),
+                ],
+            },
+        )
+    }
 }
 
 #[derive(Clone, Debug)]

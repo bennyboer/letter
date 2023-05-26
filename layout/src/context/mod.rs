@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use document::structure::DocumentNode;
-use document::style::{FontFamilySource, NodeName, Style};
+use document::style::{FontFamilySource, NodeName, Style, StyleResolvingContext};
 use document::Document;
 use font::{FontId, FontManager, LetterFont};
 
@@ -42,6 +42,9 @@ pub(crate) struct LayoutContext<'a> {
     element_lookup: HashMap<ElementId, LayoutElement>,
 
     font_manager: FontManager<'a>,
+
+    /// Current section level. When not in a section currently this is 0.
+    section_level: usize,
 }
 
 impl<'a> LayoutContext<'a> {
@@ -57,6 +60,7 @@ impl<'a> LayoutContext<'a> {
             pages: Vec::new(),
             element_lookup: HashMap::new(),
             font_manager: FontManager::new(),
+            section_level: 0,
         };
 
         result.push_page();
@@ -82,6 +86,14 @@ impl<'a> LayoutContext<'a> {
         if let Some(style) = style {
             self.remove_style_from_bounds(&style);
         }
+    }
+
+    pub(crate) fn push_section(&mut self) {
+        self.section_level += 1;
+    }
+
+    pub(crate) fn pop_section(&mut self) {
+        self.section_level -= 1;
     }
 
     pub(crate) fn current_style(&mut self) -> &LayoutStyle {
@@ -147,7 +159,12 @@ impl<'a> LayoutContext<'a> {
         let current_style = self.current_style().clone();
         if let Some(node_name) = node_name {
             let class_name = node.class_name();
-            let styles = document.styles.resolve(&node_name, class_name);
+            let resolving_context = StyleResolvingContext {
+                level: self.section_level,
+            };
+            let styles = document
+                .styles
+                .resolve(&node_name, class_name, resolving_context);
             let layout_style = self.apply_to_layout_style(current_style, &styles);
 
             self.push_style(layout_style);

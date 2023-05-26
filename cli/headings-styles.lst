@@ -1,0 +1,6 @@
+heading:level(1) {
+    font: {
+        size: 10pt;
+        variation-settings: "wght" 800, "HEXP" 40;
+    }
+}

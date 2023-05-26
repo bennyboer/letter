@@ -162,9 +162,7 @@ fn find_break_points(items: &Vec<Item>, line_width: Distance) -> LayoutResult<Ve
 
     if break_points.is_empty() {
         // Fallback to standard fit instead
-        println!(
-            "WARN - No break points found with total fit algorithm - using standard fit instead",
-        );
+        // TODO Should we log here (or somewhere else) that we had to fallback?
         return Ok(paragraph_breaker::standard_fit(
             &internal_items,
             &[to_line_breaking_width(line_width)],
