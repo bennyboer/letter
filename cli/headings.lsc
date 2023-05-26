@@ -1,0 +1,36 @@
+<heading>Title</heading>
+
+<section>
+    <heading>First-level heading</heading>
+    <paragraph>
+        Some content for the paragraph.
+        We want headlines to automatically be styles based on their level.
+        The first-level headline should be bigger than a second-level headline while the title should be the biggest.
+    </paragraph>
+
+    <section>
+        <heading>Second-level headline</heading>
+        <paragraph>
+            This is a second level headline paragraph!
+        </paragraph>
+
+        <section>
+            <heading>Third-level headline</heading>
+            <paragraph>
+                This is a third level headline paragraph!
+            </paragraph>
+
+            <section>
+                <heading>Fourth-level headline</heading>
+                <paragraph>
+                    This is a fourth level headline paragraph!
+                </paragraph>
+            </section>
+        </section>
+    </section>
+
+    <heading>Another first-level heading</heading>
+    <paragraph>
+        Here is another paragraph with nonsense content!
+    </paragraph>
+</section>
