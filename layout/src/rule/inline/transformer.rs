@@ -171,6 +171,10 @@ fn split_text_into_parts_and_map_to_items(
                     }
                 }
 
+                if result.len() == 0 {
+                    continue;
+                }
+
                 result.push(glue_after(
                     node_id,
                     ctx,

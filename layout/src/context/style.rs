@@ -14,6 +14,7 @@ pub(crate) struct LayoutStyle {
     font_variation_settings: FontVariationSettings,
     line_height: f64,
     text_alignment: TextAlignment,
+    first_line_indent: Distance,
 }
 
 impl LayoutStyle {
@@ -27,6 +28,7 @@ impl LayoutStyle {
             font_variation_settings: FontVariationSettings { variations: vec![] },
             line_height: 1.25,
             text_alignment: TextAlignment::Justify,
+            first_line_indent: Distance::zero(),
         }
     }
 
@@ -57,9 +59,13 @@ impl LayoutStyle {
     pub fn line_height(&self) -> f64 {
         self.line_height
     }
-    
+
     pub fn text_alignment(&self) -> TextAlignment {
         self.text_alignment
+    }
+
+    pub fn first_line_indent(&self) -> &Distance {
+        &self.first_line_indent
     }
 
     pub fn set_size(&mut self, size: Size) {
@@ -89,8 +95,12 @@ impl LayoutStyle {
     pub fn set_line_height(&mut self, line_height: f64) {
         self.line_height = line_height;
     }
-    
+
     pub fn set_text_alignment(&mut self, text_alignment: TextAlignment) {
         self.text_alignment = text_alignment;
+    }
+
+    pub fn set_first_line_indent(&mut self, indent: Distance) {
+        self.first_line_indent = indent;
     }
 }

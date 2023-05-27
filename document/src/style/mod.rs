@@ -194,4 +194,5 @@ pub enum Style {
 
     LineHeight(f64),
     TextAlignment(TextAlignment),
+    FirstLineIndent(Distance),
 }

@@ -34,15 +34,28 @@ pub(crate) enum LineItemContentKind {
 
 pub(crate) struct Line {
     pub(crate) items: Vec<LineItem>,
+
+    pub(crate) indent: Distance,
+
+    /// Total width of the line (including indent)
+    pub(crate) width: Distance,
+
     pub(crate) white_space_width: Distance,
 }
 
 pub(crate) type Lines = Vec<Line>;
 
 impl Line {
-    fn new(items: Vec<LineItem>, white_space_width: Distance) -> Self {
+    fn new(
+        items: Vec<LineItem>,
+        indent: Distance,
+        width: Distance,
+        white_space_width: Distance,
+    ) -> Self {
         Self {
             items,
+            indent,
+            width,
             white_space_width,
         }
     }
@@ -62,8 +75,13 @@ impl Line {
     }
 }
 
-pub(crate) fn break_into_lines(items: Vec<Item>, line_width: Distance) -> LayoutResult<Lines> {
-    let break_points = find_break_points(&items, line_width)?;
+pub(crate) fn break_into_lines(
+    items: Vec<Item>,
+    line_width: Distance,
+    first_line_indent: Distance,
+) -> LayoutResult<Lines> {
+    let line_widths = vec![line_width - first_line_indent, line_width];
+    let break_points = find_break_points(&items, line_widths)?;
 
     let mut lines = vec![Vec::new()];
     let mut break_point_idx = 0;
@@ -82,8 +100,13 @@ pub(crate) fn break_into_lines(items: Vec<Item>, line_width: Distance) -> Layout
     }
 
     let mut result = Vec::new();
-    for line in lines {
+    for (line_idx, line) in lines.into_iter().enumerate() {
         let mut line_items = Vec::new();
+        let indent = if line_idx == 0 {
+            first_line_indent
+        } else {
+            Distance::zero()
+        };
         let mut white_space_widths = Vec::new();
         let item_count = line.len();
         let mut last_line_item_without_glue_between = None;
@@ -137,7 +160,7 @@ pub(crate) fn break_into_lines(items: Vec<Item>, line_width: Distance) -> Layout
                     if last_line_item_without_glue_between.is_some() {
                         last_glue_width = Some(item.width());
                     }
-                    last_line_item_without_glue_between = None
+                    last_line_item_without_glue_between = None;
                 }
             }
         }
@@ -155,14 +178,17 @@ pub(crate) fn break_into_lines(items: Vec<Item>, line_width: Distance) -> Layout
                 Distance::zero()
             };
 
-            result.push(Line::new(line_items, white_space_width));
+            result.push(Line::new(line_items, indent, line_width, white_space_width));
         }
     }
 
     Ok(result)
 }
 
-fn find_break_points(items: &Vec<Item>, line_width: Distance) -> LayoutResult<Vec<Breakpoint>> {
+fn find_break_points(
+    items: &Vec<Item>,
+    line_widths: Vec<Distance>,
+) -> LayoutResult<Vec<Breakpoint>> {
     let internal_items = items
         .iter()
         .map(|item| match item {
@@ -183,24 +209,28 @@ fn find_break_points(items: &Vec<Item>, line_width: Distance) -> LayoutResult<Ve
         })
         .collect::<Vec<_>>();
 
-    let break_points = paragraph_breaker::total_fit(
-        &internal_items,
-        &[to_line_breaking_width(line_width)],
-        1.0,
-        0,
-    );
+    let internal_line_widths = to_line_breaking_widths(line_widths);
+    let break_points =
+        paragraph_breaker::total_fit(&internal_items, &internal_line_widths[..], 1.0, 0);
 
     if break_points.is_empty() {
         // Fallback to standard fit instead
         // TODO Should we log here (or somewhere else) that we had to fallback?
         return Ok(paragraph_breaker::standard_fit(
             &internal_items,
-            &[to_line_breaking_width(line_width)],
+            &internal_line_widths[..],
             1.0,
         ));
     }
 
     Ok(break_points)
+}
+
+fn to_line_breaking_widths(distances: Vec<Distance>) -> Vec<i32> {
+    distances
+        .into_iter()
+        .map(|distance| to_line_breaking_width(distance))
+        .collect()
 }
 
 fn to_line_breaking_width(distance: Distance) -> i32 {

@@ -137,6 +137,11 @@ fn parse_inline_styles(
         result.push(Style::TextAlignment(alignment));
     }
 
+    if properties.contains_key("first-line-indent") {
+        let distance = parse_distance_property(&properties, "first-line-indent")?;
+        result.push(Style::FirstLineIndent(distance));
+    }
+
     Ok(())
 }
 

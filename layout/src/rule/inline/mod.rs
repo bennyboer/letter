@@ -1,5 +1,3 @@
-use std::cmp::min;
-
 use document::structure::DocumentNode;
 use document::style::{FontVariationSettings, TextAlignment};
 use document::Document;
@@ -36,6 +34,7 @@ impl LayoutRule for InlineLayoutRule {
     ) -> LayoutResult<()> {
         let bounds = ctx.bounds();
         let style = ctx.current_style();
+        let first_line_indent = *style.first_line_indent();
         let size = style.size();
 
         let line_width = if size.width < bounds.size().width {
@@ -45,15 +44,15 @@ impl LayoutRule for InlineLayoutRule {
         };
 
         let items = transformer::to_box_glue_model(node, document, ctx)?;
-        let lines = line_breaker::break_into_lines(items, line_width)?;
+        let lines = line_breaker::break_into_lines(items, line_width, first_line_indent)?;
 
-        layout_lines(lines, line_width, ctx)?;
+        layout_lines(lines, ctx)?;
 
         Ok(())
     }
 }
 
-fn layout_lines(lines: Lines, line_width: Distance, ctx: &mut LayoutContext) -> LayoutResult<()> {
+fn layout_lines(lines: Lines, ctx: &mut LayoutContext) -> LayoutResult<()> {
     let mut bounds = ctx.bounds();
     let style = ctx.current_style().clone();
 
@@ -76,7 +75,7 @@ fn layout_lines(lines: Lines, line_width: Distance, ctx: &mut LayoutContext) -> 
     for (line_index, line) in lines.into_iter().enumerate() {
         let is_last_line = line_index == line_count - 1;
 
-        let alignment = align_line(line_width, &line, is_last_line, &style);
+        let alignment = align_line(&line, is_last_line, &style);
 
         layout_line(line, &mut position_ctx, alignment, ctx)?;
 
@@ -205,16 +204,12 @@ struct Alignment {
     white_space_width: Distance,
 }
 
-fn align_line(
-    line_width: Distance,
-    line: &Line,
-    is_last_line: bool,
-    style: &LayoutStyle,
-) -> Alignment {
+fn align_line(line: &Line, is_last_line: bool, style: &LayoutStyle) -> Alignment {
     let text_alignment = style.text_alignment();
 
     let white_space_count_in_line = line.white_spaces();
     let min_width = line.min_width();
+    let line_width = line.width - line.indent;
     let stretchable_width = line_width - min_width;
 
     let preferred_white_space_width = line.white_space_width;
@@ -250,7 +245,7 @@ fn align_line(
                 _ => unreachable!(),
             }
         }
-    };
+    } + line.indent;
 
     let final_white_space_width = if let TextAlignment::Justify = text_alignment {
         justified_white_space_width
