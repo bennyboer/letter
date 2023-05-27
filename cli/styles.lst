@@ -44,7 +44,7 @@ image {
 paragraph {
   font: {
     variation-settings: "wght" 250, "HEXP" 0;
-    size: 11pt;
+    size: 12pt;
   }
   margin: {
     bottom: 2mm;

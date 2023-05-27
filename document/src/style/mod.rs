@@ -12,6 +12,7 @@ pub use crate::style::node::NodeName;
 pub use crate::style::pseudo_class::PseudoClass;
 use crate::style::resolver::StyleResolver;
 pub use crate::style::resolver::StyleResolvingContext;
+pub use crate::style::text_alignment::TextAlignment;
 
 mod class;
 mod definition;
@@ -21,6 +22,7 @@ mod id;
 mod node;
 mod pseudo_class;
 mod resolver;
+mod text_alignment;
 
 const ROOT_NODE_NAME: &'static str = "document";
 const HEADING_NODE_NAME: &'static str = "heading";
@@ -191,4 +193,5 @@ pub enum Style {
     FontVariationSettings(FontVariationSettings),
 
     LineHeight(f64),
+    TextAlignment(TextAlignment),
 }

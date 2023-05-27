@@ -229,6 +229,7 @@ impl<'a> LayoutContext<'a> {
                     layout_style.set_font_variation_settings(settings.clone())
                 }
                 Style::LineHeight(line_height) => layout_style.set_line_height(*line_height),
+                Style::TextAlignment(alignment) => layout_style.set_text_alignment(*alignment),
             };
         }
 

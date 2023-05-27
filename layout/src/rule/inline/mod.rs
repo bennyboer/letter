@@ -1,5 +1,7 @@
+use std::cmp::min;
+
 use document::structure::DocumentNode;
-use document::style::FontVariationSettings;
+use document::style::{FontVariationSettings, TextAlignment};
 use document::Document;
 use font::{FontId, FontVariationId, LetterFont, LetterFontVariation};
 use typeset::glyph_shaping::{shape_text, GlyphDetails};
@@ -10,7 +12,7 @@ use crate::context::{LayoutContext, LayoutStyle};
 use crate::element::content::{LayoutElementContent, TextSliceContent};
 use crate::element::{Bounds, LayoutElement, Position, Size};
 use crate::result::LayoutResult;
-use crate::rule::inline::line_breaker::{Line, LineItem, LineItemContentKind, LineUtils, Lines};
+use crate::rule::inline::line_breaker::{Line, LineItem, LineItemContentKind, Lines};
 use crate::rule::LayoutRule;
 
 mod item;
@@ -116,9 +118,11 @@ fn layout_line(
     alignment: Alignment,
     ctx: &mut LayoutContext,
 ) -> LayoutResult<()> {
-    let item_count_in_line = line.len();
+    let item_count_in_line = line.items.len();
 
-    for (item_index, item) in line.into_iter().enumerate() {
+    position_ctx.x_offset += alignment.indent;
+
+    for (item_index, item) in line.items.into_iter().enumerate() {
         let is_last_item_on_line = item_index == item_count_in_line - 1;
         let flags = ItemLayoutFlags {
             is_last_item_on_line,
@@ -141,8 +145,6 @@ fn layout_item_on_line(
     alignment: &Alignment,
     ctx: &mut LayoutContext,
 ) -> LayoutResult<()> {
-    let mut white_space_width = Distance::zero();
-
     let mut elements = Vec::new();
     for part in item.parts {
         let style = part.style;
@@ -178,8 +180,6 @@ fn layout_item_on_line(
                 position_ctx.x_offset += result.width;
             }
         }
-
-        white_space_width = shape_text(" ", font_ctx.font_size, font)?.width;
     }
 
     for element in elements {
@@ -187,11 +187,7 @@ fn layout_item_on_line(
     }
 
     if !flags.is_last_item_on_line {
-        if alignment.is_justified {
-            position_ctx.x_offset += alignment.white_space_width;
-        } else {
-            position_ctx.x_offset += white_space_width;
-        }
+        position_ctx.x_offset += alignment.white_space_width;
     }
 
     Ok(())
@@ -205,7 +201,7 @@ struct PositionContext {
 }
 
 struct Alignment {
-    is_justified: bool,
+    indent: Distance,
     white_space_width: Distance,
 }
 
@@ -213,36 +209,58 @@ fn align_line(
     line_width: Distance,
     line: &Line,
     is_last_line: bool,
-    _style: &LayoutStyle,
+    style: &LayoutStyle,
 ) -> Alignment {
-    if is_last_line {
-        return Alignment {
-            is_justified: false,
-            white_space_width: Distance::zero(),
-        };
-    }
-
-    let line_indent = Distance::zero(); // TODO Support first-line indent style (or generally for every line!) - get from style
-
-    let min_width = line.min_width() - line_indent;
-    let stretchable_width = line_width - min_width;
+    let text_alignment = style.text_alignment();
 
     let white_space_count_in_line = line.white_spaces();
-    if white_space_count_in_line == 0 {
-        return Alignment {
-            is_justified: false,
-            white_space_width: Distance::zero(),
-        };
-    }
+    let min_width = line.min_width();
+    let stretchable_width = line_width - min_width;
 
-    let white_space_width = Distance::new(
-        stretchable_width.value(Millimeter) / white_space_count_in_line as UnitValue,
-        Millimeter,
-    );
+    let preferred_white_space_width = line.white_space_width;
+    let white_space_width = if white_space_count_in_line > 0 {
+        Distance::new(
+            stretchable_width.value(Millimeter) / white_space_count_in_line as UnitValue,
+            Millimeter,
+        )
+    } else {
+        Distance::zero()
+    };
+    let non_justified_white_space_width = if white_space_width < preferred_white_space_width {
+        white_space_width
+    } else {
+        preferred_white_space_width
+    };
+    let justified_white_space_width = if is_last_line {
+        non_justified_white_space_width
+    } else {
+        white_space_width
+    };
+
+    let indent = {
+        if let TextAlignment::Justify | TextAlignment::Left = text_alignment {
+            Distance::zero()
+        } else {
+            let remaining_space = stretchable_width
+                - non_justified_white_space_width * white_space_count_in_line as UnitValue;
+
+            match text_alignment {
+                TextAlignment::Center => remaining_space / 2.0,
+                TextAlignment::Right => remaining_space,
+                _ => unreachable!(),
+            }
+        }
+    };
+
+    let final_white_space_width = if let TextAlignment::Justify = text_alignment {
+        justified_white_space_width
+    } else {
+        non_justified_white_space_width
+    };
 
     return Alignment {
-        is_justified: true,
-        white_space_width,
+        indent,
+        white_space_width: final_white_space_width,
     };
 }
 

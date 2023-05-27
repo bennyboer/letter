@@ -9,7 +9,7 @@ use pest::Parser;
 
 use document::style::{
     ClassName, DocumentStyles, FontFamilySource, FontVariation, FontVariationSettings, NodeName,
-    PseudoClass, Style, StyleDefinition,
+    PseudoClass, Style, StyleDefinition, TextAlignment,
 };
 use unit::{Distance, DistanceUnit};
 
@@ -132,7 +132,37 @@ fn parse_inline_styles(
         result.push(Style::LineHeight(number));
     }
 
+    if properties.contains_key("alignment") {
+        let alignment = parse_alignment_property(&properties, "alignment")?;
+        result.push(Style::TextAlignment(alignment));
+    }
+
     Ok(())
+}
+
+fn parse_alignment_property(
+    properties: &HashMap<String, String>,
+    key: &str,
+) -> StyleParseResult<TextAlignment> {
+    if let Some(value) = properties.get(key) {
+        let alignment = match value.trim() {
+            "left" => TextAlignment::Left,
+            "center" => TextAlignment::Center,
+            "right" => TextAlignment::Right,
+            "justify" => TextAlignment::Justify,
+            _ => {
+                return Err(format!("Invalid value '{}' for property '{}'", value, key)
+                    .to_owned()
+                    .into())
+            }
+        };
+
+        return Ok(alignment);
+    }
+
+    Err(format!("No value for property '{}' defined", key)
+        .to_owned()
+        .into())
 }
 
 fn parse_number_property(properties: &HashMap<String, String>, key: &str) -> StyleParseResult<f64> {

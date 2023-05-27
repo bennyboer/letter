@@ -1,6 +1,7 @@
 use paragraph_breaker::Breakpoint;
 
 use document::structure::NodeId;
+use unit::DistanceUnit::Millimeter;
 use unit::{Distance, DistanceUnit};
 
 use crate::context::LayoutStyle;
@@ -31,23 +32,29 @@ pub(crate) enum LineItemContentKind {
     Text(String),
 }
 
-pub(crate) type Line = Vec<LineItem>;
-pub(crate) type Lines = Vec<Line>;
-
-pub(crate) trait LineUtils {
-    fn white_spaces(&self) -> usize;
-    fn min_width(&self) -> Distance;
+pub(crate) struct Line {
+    pub(crate) items: Vec<LineItem>,
+    pub(crate) white_space_width: Distance,
 }
 
-impl LineUtils for Line {
-    fn white_spaces(&self) -> usize {
-        self.len() - 1
+pub(crate) type Lines = Vec<Line>;
+
+impl Line {
+    fn new(items: Vec<LineItem>, white_space_width: Distance) -> Self {
+        Self {
+            items,
+            white_space_width,
+        }
     }
 
-    fn min_width(&self) -> Distance {
+    pub(crate) fn white_spaces(&self) -> usize {
+        self.items.len() - 1
+    }
+
+    pub(crate) fn min_width(&self) -> Distance {
         let mut width = Distance::zero();
 
-        for item in self {
+        for item in self.items.iter() {
             width += item.width();
         }
 
@@ -77,8 +84,10 @@ pub(crate) fn break_into_lines(items: Vec<Item>, line_width: Distance) -> Layout
     let mut result = Vec::new();
     for line in lines {
         let mut line_items = Vec::new();
+        let mut white_space_widths = Vec::new();
         let item_count = line.len();
         let mut last_line_item_without_glue_between = None;
+        let mut last_glue_width = None;
         for (item_index, item) in line.into_iter().enumerate() {
             let is_last_item = item_index == item_count - 1;
 
@@ -106,6 +115,10 @@ pub(crate) fn break_into_lines(items: Vec<Item>, line_width: Distance) -> Layout
                         };
                         line_items.push(line_item);
                         last_line_item_without_glue_between = Some(line_items.len() - 1);
+
+                        if let Some(last_glue_width) = last_glue_width {
+                            white_space_widths.push(last_glue_width);
+                        }
                     };
                 }
                 Item::Penalty(item) => {
@@ -120,12 +133,29 @@ pub(crate) fn break_into_lines(items: Vec<Item>, line_width: Distance) -> Layout
                         });
                     }
                 }
-                _ => last_line_item_without_glue_between = None,
+                Item::Glue(item) => {
+                    if last_line_item_without_glue_between.is_some() {
+                        last_glue_width = Some(item.width());
+                    }
+                    last_line_item_without_glue_between = None
+                }
             }
         }
 
         if !line_items.is_empty() {
-            result.push(line_items);
+            let white_spaces = line_items.len() - 1;
+            let total_white_space_width: Distance = white_space_widths.into_iter().sum();
+
+            let white_space_width = if white_spaces > 0 {
+                Distance::new(
+                    total_white_space_width.value(Millimeter) / white_spaces as f64,
+                    Millimeter,
+                )
+            } else {
+                Distance::zero()
+            };
+
+            result.push(Line::new(line_items, white_space_width));
         }
     }
 

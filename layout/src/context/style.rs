@@ -1,4 +1,4 @@
-use document::style::{FontFamilySource, FontVariationSettings};
+use document::style::{FontFamilySource, FontVariationSettings, TextAlignment};
 use unit::{Distance, DistanceUnit};
 
 use crate::context::insets::Insets;
@@ -13,6 +13,7 @@ pub(crate) struct LayoutStyle {
     font_family: FontFamilySource,
     font_variation_settings: FontVariationSettings,
     line_height: f64,
+    text_alignment: TextAlignment,
 }
 
 impl LayoutStyle {
@@ -25,6 +26,7 @@ impl LayoutStyle {
             font_family: FontFamilySource::Default,
             font_variation_settings: FontVariationSettings { variations: vec![] },
             line_height: 1.25,
+            text_alignment: TextAlignment::Justify,
         }
     }
 
@@ -55,6 +57,10 @@ impl LayoutStyle {
     pub fn line_height(&self) -> f64 {
         self.line_height
     }
+    
+    pub fn text_alignment(&self) -> TextAlignment {
+        self.text_alignment
+    }
 
     pub fn set_size(&mut self, size: Size) {
         self.size = size;
@@ -82,5 +88,9 @@ impl LayoutStyle {
 
     pub fn set_line_height(&mut self, line_height: f64) {
         self.line_height = line_height;
+    }
+    
+    pub fn set_text_alignment(&mut self, text_alignment: TextAlignment) {
+        self.text_alignment = text_alignment;
     }
 }
