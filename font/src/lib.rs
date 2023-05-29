@@ -1,9 +1,10 @@
-use std::collections::HashMap;
-
 use font_kit::family_name::FamilyName;
 use font_kit::handle::Handle;
 use font_kit::properties::{Properties, Style};
 use font_kit::source::SystemSource;
+use std::collections::HashMap;
+
+use document::style::FontFamilyType;
 
 pub use font::LetterFont;
 pub use id::FontId;
@@ -24,6 +25,7 @@ pub struct FontManager<'a> {
     registered_fonts: HashMap<FontId, LetterFont<'a>>,
     name_to_id: HashMap<String, FontId>,
     path_to_id: HashMap<String, FontId>,
+    type_to_id: HashMap<FontFamilyType, FontId>,
 }
 
 impl<'a> FontManager<'a> {
@@ -33,6 +35,7 @@ impl<'a> FontManager<'a> {
             registered_fonts: HashMap::new(),
             name_to_id: HashMap::new(),
             path_to_id: HashMap::new(),
+            type_to_id: HashMap::new(),
         };
 
         let default_font = LetterFont::from_bytes(DEFAULT_FONT_BYTES, 0);
@@ -63,18 +66,49 @@ impl<'a> FontManager<'a> {
         DEFAULT_FONT_ID
     }
 
+    pub fn find_by_type(&mut self, font_family_type: FontFamilyType) -> Option<FontId> {
+        if let Some(font_id) = self.type_to_id.get(&font_family_type) {
+            return Some(font_id.clone());
+        }
+
+        let family_name = match font_family_type {
+            FontFamilyType::Serif => FamilyName::Serif,
+            FontFamilyType::SansSerif => FamilyName::SansSerif,
+            FontFamilyType::Monospace => FamilyName::Monospace,
+            FontFamilyType::Cursive => FamilyName::Cursive,
+            FontFamilyType::Fantasy => FamilyName::Fantasy,
+        };
+        let font_id = self.find_by_family_name(family_name);
+
+        if let Some(font_id) = font_id {
+            self.type_to_id.insert(font_family_type, font_id);
+        }
+
+        font_id
+    }
+
     pub fn find_by_name(&mut self, name: &str) -> Option<FontId> {
         if let Some(font_id) = self.name_to_id.get(name) {
             return Some(font_id.clone());
         }
 
         let family_name = FamilyName::Title(name.to_owned());
+        let font_id = self.find_by_family_name(family_name);
+
+        if let Some(font_id) = font_id {
+            self.name_to_id.insert(name.to_owned(), font_id);
+        }
+
+        font_id
+    }
+
+    fn find_by_family_name(&mut self, family_name: FamilyName) -> Option<FontId> {
         let family_names = vec![family_name];
 
         let mut properties = Properties::new();
         properties.style = Style::Normal;
 
-        let font_id = SystemSource::new()
+        SystemSource::new()
             .select_best_match(&family_names, &properties)
             .ok()
             .and_then(|font| match font {
@@ -87,13 +121,7 @@ impl<'a> FontManager<'a> {
                     let font_id = self.register_font(letter_font);
                     Some(font_id)
                 }
-            });
-
-        if let Some(font_id) = font_id {
-            self.name_to_id.insert(name.to_owned(), font_id);
-        }
-
-        font_id
+            })
     }
 
     pub fn find_by_path(&mut self, path: &str) -> Option<FontId> {
@@ -111,7 +139,7 @@ impl<'a> FontManager<'a> {
 
         font_id
     }
-    
+
     pub fn subset_fonts(&mut self) {
         for font in self.registered_fonts.values_mut() {
             font.subset();

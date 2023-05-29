@@ -142,6 +142,9 @@ impl<'a> LayoutContext<'a> {
         match font_family {
             FontFamilySource::Default => Some(self.font_manager.default_font_id()),
             FontFamilySource::Name(name) => self.font_manager.find_by_name(name.as_str()),
+            FontFamilySource::Type(font_family_type) => {
+                self.font_manager.find_by_type(*font_family_type)
+            }
             FontFamilySource::Path(path) => self.font_manager.find_by_path(path.as_str()),
         }
     }

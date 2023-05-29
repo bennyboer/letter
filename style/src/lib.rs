@@ -8,8 +8,8 @@ use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 
 use document::style::{
-    ClassName, DocumentStyles, FontFamilySource, FontVariation, FontVariationSettings, NodeName,
-    PseudoClass, Style, StyleDefinition, TextAlignment,
+    ClassName, DocumentStyles, FontFamilySource, FontFamilyType, FontVariation,
+    FontVariationSettings, NodeName, PseudoClass, Style, StyleDefinition, TextAlignment,
 };
 use unit::{Distance, DistanceUnit};
 
@@ -300,6 +300,21 @@ fn parse_font_styles(
 
         match family {
             "default" => result.push(Style::FontFamily(FontFamilySource::Default)),
+            "serif" => result.push(Style::FontFamily(FontFamilySource::Type(
+                FontFamilyType::Serif,
+            ))),
+            "sans-serif" => result.push(Style::FontFamily(FontFamilySource::Type(
+                FontFamilyType::SansSerif,
+            ))),
+            "monospace" => result.push(Style::FontFamily(FontFamilySource::Type(
+                FontFamilyType::Monospace,
+            ))),
+            "cursive" => result.push(Style::FontFamily(FontFamilySource::Type(
+                FontFamilyType::Cursive,
+            ))),
+            "fantasy" => result.push(Style::FontFamily(FontFamilySource::Type(
+                FontFamilyType::Fantasy,
+            ))),
             _ => {
                 let is_url = family.starts_with("url(") && family.ends_with(")");
                 if is_url {

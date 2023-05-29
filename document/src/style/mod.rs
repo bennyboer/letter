@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub use font_family::FontFamilySource;
+pub use font_family::{FontFamilySource, FontFamilyType};
 pub use font_variation_settings::{FontVariation, FontVariationSettings};
 use unit::Distance;
 use unit::DistanceUnit::{Centimeter, Millimeter, Points};

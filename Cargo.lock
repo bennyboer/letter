@@ -451,6 +451,7 @@ checksum = "7bad48618fdb549078c333a7a8528acb57af271d0433bdecd523eb620628364e"
 name = "font"
 version = "0.1.0"
 dependencies = [
+ "document",
  "font-kit",
  "harfbuzz_rs",
 ]
