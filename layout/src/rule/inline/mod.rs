@@ -1,7 +1,7 @@
 use document::structure::DocumentNode;
-use document::style::{FontVariationSettings, TextAlignment};
+use document::style::TextAlignment;
 use document::Document;
-use font::{FontId, FontVariationId, LetterFont, LetterFontVariation};
+use font::LetterFont;
 use typeset::glyph_shaping::{shape_text, GlyphDetails};
 use unit::{Distance, DistanceUnit, UnitValue};
 use DistanceUnit::Millimeter;
@@ -13,6 +13,7 @@ use crate::result::LayoutResult;
 use crate::rule::inline::line_breaker::{Line, LineItem, LineItemContentKind, Lines};
 use crate::rule::LayoutRule;
 
+mod font_util;
 mod item;
 mod line_breaker;
 mod transformer;
@@ -146,8 +147,7 @@ fn layout_item_on_line(
 ) -> LayoutResult<()> {
     let mut elements = Vec::new();
     for part in item.parts {
-        let style = part.style;
-        let font_ctx = setup_font(style, ctx)?;
+        let font_ctx = font_util::setup_font(ctx, Some(&part.style))?;
         let font = ctx.get_font_mut(&font_ctx.font_id);
 
         match part.kind {
@@ -257,48 +257,6 @@ fn align_line(line: &Line, is_last_line: bool, style: &LayoutStyle) -> Alignment
         indent,
         white_space_width: final_white_space_width,
     };
-}
-
-struct FontContext {
-    font_id: FontId,
-    _font_variation_id: FontVariationId,
-    font_size: Distance,
-}
-
-impl FontContext {
-    pub fn new(font_id: FontId, font_variation_id: FontVariationId, font_size: Distance) -> Self {
-        Self {
-            font_id,
-            _font_variation_id: font_variation_id,
-            font_size,
-        }
-    }
-}
-
-fn setup_font(style: LayoutStyle, ctx: &mut LayoutContext) -> LayoutResult<FontContext> {
-    let font_size = *style.font_size();
-    let font_family = style.font_family().clone();
-    let font_variation_settings = style.font_variation_settings().clone();
-    let font_id = ctx.find_font(&font_family).ok_or(format!(
-        "Could not find font for font-family: {:?}",
-        font_family
-    ))?;
-    let font = ctx.get_font_mut(&font_id);
-    let font_variation_id = initialize_font_variations(font, &font_variation_settings);
-
-    Ok(FontContext::new(font_id, font_variation_id, font_size))
-}
-
-fn initialize_font_variations(
-    font: &mut LetterFont,
-    font_variation_settings: &FontVariationSettings,
-) -> FontVariationId {
-    let variations: Vec<LetterFontVariation> = font_variation_settings
-        .variations
-        .iter()
-        .map(|v| LetterFontVariation::new(v.name.to_owned(), v.value))
-        .collect();
-    return font.set_variations(&variations);
 }
 
 fn mark_codepoints_as_used(font: &mut LetterFont, glyphs: &Vec<GlyphDetails>) {

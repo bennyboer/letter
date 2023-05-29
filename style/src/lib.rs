@@ -8,7 +8,7 @@ use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 
 use document::style::{
-    ClassName, DocumentStyles, FontFamilySource, FontFamilyType, FontVariation,
+    ClassName, DocumentStyles, FontFamilySource, FontFamilyType, FontStyle, FontVariation,
     FontVariationSettings, NodeName, PseudoClass, Style, StyleDefinition, TextAlignment,
 };
 use unit::{Distance, DistanceUnit};
@@ -290,6 +290,8 @@ fn parse_font_styles(
     properties: HashMap<String, String>,
     result: &mut Vec<Style>,
 ) -> StyleParseResult<()> {
+    let mut font_weight = None;
+
     if properties.contains_key("size") {
         let distance = parse_distance_property(&properties, "size")?;
         result.push(Style::FontSize(distance));
@@ -332,6 +334,39 @@ fn parse_font_styles(
         };
     }
 
+    if properties.contains_key("weight") {
+        let weight = properties.get("weight").unwrap().as_str().trim();
+        let weight = match weight {
+            "normal" => 400.0,
+            "bold" => 700.0,
+            "bolder" => 900.0,
+            "light" => 300.0,
+            "lighter" => 100.0,
+            _ => weight.parse::<f32>()?,
+        };
+        result.push(Style::FontWeight(weight));
+        font_weight = Some(weight);
+    }
+
+    if properties.contains_key("stretch") {
+        let stretch = properties.get("stretch").unwrap().as_str().trim();
+        let stretch = stretch.parse::<f32>()?;
+        result.push(Style::FontStretch(stretch));
+    }
+
+    if properties.contains_key("style") {
+        let style = properties.get("style").unwrap().as_str().trim();
+
+        match style {
+            "normal" => result.push(Style::FontStyle(FontStyle::Normal)),
+            "italic" => result.push(Style::FontStyle(FontStyle::Italic)),
+            "oblique" => result.push(Style::FontStyle(FontStyle::Oblique)),
+            _ => {
+                return Err(format!("Unknown font style '{}'", style).to_owned().into());
+            }
+        };
+    }
+
     if properties.contains_key("variation-settings") {
         let variation_settings = properties
             .get("variation-settings")
@@ -368,6 +403,13 @@ fn parse_font_styles(
 
         result.push(Style::FontVariationSettings(FontVariationSettings {
             variations,
+        }));
+    } else if font_weight.is_some() {
+        result.push(Style::FontVariationSettings(FontVariationSettings {
+            variations: vec![FontVariation {
+                name: "wght".to_owned(),
+                value: font_weight.unwrap() as i32,
+            }],
         }));
     }
 

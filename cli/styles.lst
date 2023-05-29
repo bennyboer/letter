@@ -1,9 +1,3 @@
-b {
-  font: {
-    variation-settings: "wght" 500;
-  }
-}
-
 heading {
   font: {
     variation-settings: "wght" 800, "HEXP" 40;

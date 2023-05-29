@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use document::structure::DocumentNode;
 use document::style::{FontFamilySource, NodeName, Style, StyleResolvingContext};
 use document::Document;
-use font::{FontId, FontManager, LetterFont};
+use font::{FontId, FontManager, FontStyleSettings, LetterFont};
 
 pub(crate) use crate::context::insets::Insets;
 pub(crate) use crate::context::page_sizing::{OneSizeFitsAllPageSizing, PageSizing};
@@ -138,12 +138,18 @@ impl<'a> LayoutContext<'a> {
         self.bounds
     }
 
-    pub(crate) fn find_font(&mut self, font_family: &FontFamilySource) -> Option<FontId> {
+    pub(crate) fn find_font(
+        &mut self,
+        font_family: &FontFamilySource,
+        style: Option<&LayoutStyle>,
+    ) -> Option<FontId> {
+        let style = self.current_font_style(style);
+
         match font_family {
             FontFamilySource::Default => Some(self.font_manager.default_font_id()),
-            FontFamilySource::Name(name) => self.font_manager.find_by_name(name.as_str()),
+            FontFamilySource::Name(name) => self.font_manager.find_by_name(name.as_str(), style),
             FontFamilySource::Type(font_family_type) => {
-                self.font_manager.find_by_type(*font_family_type)
+                self.font_manager.find_by_type(*font_family_type, style)
             }
             FontFamilySource::Path(path) => self.font_manager.find_by_path(path.as_str()),
         }
@@ -231,6 +237,9 @@ impl<'a> LayoutContext<'a> {
                 Style::FontVariationSettings(settings) => {
                     layout_style.set_font_variation_settings(settings.clone())
                 }
+                Style::FontWeight(weight) => layout_style.set_font_weight(*weight),
+                Style::FontStretch(stretch) => layout_style.set_font_stretch(*stretch),
+                Style::FontStyle(style) => layout_style.set_font_style(*style),
                 Style::LineHeight(line_height) => layout_style.set_line_height(*line_height),
                 Style::TextAlignment(alignment) => layout_style.set_text_alignment(*alignment),
                 Style::FirstLineIndent(distance) => layout_style.set_first_line_indent(*distance),
@@ -320,5 +329,15 @@ impl<'a> LayoutContext<'a> {
         for style in styles {
             self.apply_style_to_bounds(&style);
         }
+    }
+
+    fn current_font_style(&mut self, style: Option<&LayoutStyle>) -> FontStyleSettings {
+        let style = style.unwrap_or_else(|| self.current_style());
+
+        let font_weight = style.font_weight();
+        let font_stretch = style.font_stretch();
+        let font_style = style.font_style();
+
+        FontStyleSettings::new(font_style, font_weight, font_stretch)
     }
 }

@@ -7,6 +7,9 @@ use unit::DistanceUnit::{Centimeter, Millimeter, Points};
 
 pub use crate::style::class::ClassName;
 pub use crate::style::definition::StyleDefinition;
+pub use crate::style::font_stretch::FontStretch;
+pub use crate::style::font_style::FontStyle;
+pub use crate::style::font_weight::FontWeight;
 use crate::style::id::StyleId;
 pub use crate::style::node::NodeName;
 pub use crate::style::pseudo_class::PseudoClass;
@@ -17,7 +20,10 @@ pub use crate::style::text_alignment::TextAlignment;
 mod class;
 mod definition;
 mod font_family;
+mod font_stretch;
+mod font_style;
 mod font_variation_settings;
+mod font_weight;
 mod id;
 mod node;
 mod pseudo_class;
@@ -26,6 +32,8 @@ mod text_alignment;
 
 const ROOT_NODE_NAME: &'static str = "document";
 const HEADING_NODE_NAME: &'static str = "heading";
+const BOLD_NODE_NAME: &'static str = "b";
+const ITALIC_NODE_NAME: &'static str = "i";
 
 pub struct DocumentStyles {
     styles: HashMap<StyleId, StyleDefinition>,
@@ -104,6 +112,7 @@ fn fill_default_styles(styles: &mut DocumentStyles) {
     );
 
     fill_default_heading_styles(styles);
+    fill_default_font_styling(styles);
 }
 
 fn fill_default_heading_styles(styles: &mut DocumentStyles) {
@@ -173,6 +182,41 @@ fn fill_default_heading_styles(styles: &mut DocumentStyles) {
     }
 }
 
+fn fill_default_font_styling(styles: &mut DocumentStyles) {
+    styles.register_style_definition(
+        &BOLD_NODE_NAME.into(),
+        None,
+        None,
+        StyleDefinition {
+            styles: vec![
+                Style::FontVariationSettings(FontVariationSettings {
+                    variations: vec![FontVariation {
+                        name: "wght".into(),
+                        value: 700,
+                    }],
+                }),
+                Style::FontWeight(700.0),
+            ],
+        },
+    );
+    styles.register_style_definition(
+        &ITALIC_NODE_NAME.into(),
+        None,
+        None,
+        StyleDefinition {
+            styles: vec![
+                Style::FontVariationSettings(FontVariationSettings {
+                    variations: vec![FontVariation {
+                        name: "ital".into(),
+                        value: 1,
+                    }],
+                }),
+                Style::FontStyle(FontStyle::Italic),
+            ],
+        },
+    );
+}
+
 #[derive(Clone, Debug)]
 pub enum Style {
     Width(Distance),
@@ -191,6 +235,9 @@ pub enum Style {
     FontSize(Distance),
     FontFamily(FontFamilySource),
     FontVariationSettings(FontVariationSettings),
+    FontWeight(FontWeight),
+    FontStretch(FontStretch),
+    FontStyle(FontStyle),
 
     LineHeight(f64),
     TextAlignment(TextAlignment),

@@ -4,15 +4,15 @@
 use hypher::{hyphenate, Lang};
 
 use document::structure::{DocumentNode, DocumentNodeValue, NodeId};
-use document::style::FontVariationSettings;
 use document::Document;
-use font::{FontId, FontVariationId, LetterFont, LetterFontVariation};
 use typeset::glyph_shaping::shape_text;
 use unit::{Distance, DistanceUnit};
 use DocumentNodeValue::{Bold, Italic, Text};
 
 use crate::context::LayoutContext;
 use crate::result::LayoutResult;
+use crate::rule::inline::font_util;
+use crate::rule::inline::font_util::FontContext;
 use crate::rule::inline::item::{BoxContent, BoxItem, GlueItem, Item, PenaltyItem};
 
 const HYPHEN_PENALTY: i32 = 50;
@@ -96,26 +96,11 @@ fn map_text_node_to_item(
     ctx: &mut LayoutContext,
     result: &mut Vec<Item>,
 ) -> LayoutResult<bool> {
-    let font_ctx = setup_font(ctx)?;
+    let font_ctx = font_util::setup_font(ctx, None)?;
 
     split_text_into_parts_and_map_to_items(text, node.id, ctx, font_ctx, result)?;
 
     Ok(true)
-}
-
-fn setup_font(ctx: &mut LayoutContext) -> LayoutResult<FontContext> {
-    let style = ctx.current_style();
-    let font_size = *style.font_size();
-    let font_family = style.font_family().clone();
-    let font_variation_settings = style.font_variation_settings().clone();
-    let font_id = ctx.find_font(&font_family).ok_or(format!(
-        "Could not find font for font-family: {:?}",
-        font_family
-    ))?;
-    let font = ctx.get_font_mut(&font_id);
-    let font_variation_id = initialize_font_variations(font, &font_variation_settings);
-
-    Ok(FontContext::new(font_id, font_variation_id, font_size))
 }
 
 fn glue_after(
@@ -260,32 +245,4 @@ fn calculate_text_width(
     let result = shape_text(text, font_ctx.font_size, font)?;
 
     Ok(result.width)
-}
-
-fn initialize_font_variations(
-    font: &mut LetterFont,
-    font_variation_settings: &FontVariationSettings,
-) -> FontVariationId {
-    let variations: Vec<LetterFontVariation> = font_variation_settings
-        .variations
-        .iter()
-        .map(|v| LetterFontVariation::new(v.name.to_owned(), v.value))
-        .collect();
-    return font.set_variations(&variations);
-}
-
-struct FontContext {
-    font_id: FontId,
-    _font_variation_id: FontVariationId,
-    font_size: Distance,
-}
-
-impl FontContext {
-    pub fn new(font_id: FontId, font_variation_id: FontVariationId, font_size: Distance) -> Self {
-        Self {
-            font_id,
-            _font_variation_id: font_variation_id,
-            font_size,
-        }
-    }
 }

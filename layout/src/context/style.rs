@@ -1,4 +1,6 @@
-use document::style::{FontFamilySource, FontVariationSettings, TextAlignment};
+use document::style::{
+    FontFamilySource, FontStretch, FontStyle, FontVariationSettings, FontWeight, TextAlignment,
+};
 use unit::{Distance, DistanceUnit};
 
 use crate::context::insets::Insets;
@@ -12,6 +14,9 @@ pub(crate) struct LayoutStyle {
     font_size: Distance,
     font_family: FontFamilySource,
     font_variation_settings: FontVariationSettings,
+    font_weight: FontWeight,
+    font_stretch: FontStretch,
+    font_style: FontStyle,
     line_height: f64,
     text_alignment: TextAlignment,
     first_line_indent: Distance,
@@ -26,6 +31,9 @@ impl LayoutStyle {
             font_size: Distance::new(12.0, DistanceUnit::Points),
             font_family: FontFamilySource::Default,
             font_variation_settings: FontVariationSettings { variations: vec![] },
+            font_weight: 400.0,
+            font_stretch: 1.0,
+            font_style: FontStyle::Normal,
             line_height: 1.25,
             text_alignment: TextAlignment::Justify,
             first_line_indent: Distance::zero(),
@@ -52,8 +60,20 @@ impl LayoutStyle {
         &self.font_family
     }
 
-    pub fn font_variation_settings(&self) -> &FontVariationSettings {
-        &self.font_variation_settings
+    pub fn font_variation_settings(&self) -> FontVariationSettings {
+        self.font_variation_settings.clone()
+    }
+
+    pub fn font_weight(&self) -> FontWeight {
+        self.font_weight
+    }
+
+    pub fn font_stretch(&self) -> FontStretch {
+        self.font_stretch
+    }
+
+    pub fn font_style(&self) -> FontStyle {
+        self.font_style
     }
 
     pub fn line_height(&self) -> f64 {
@@ -89,7 +109,29 @@ impl LayoutStyle {
     }
 
     pub fn set_font_variation_settings(&mut self, settings: FontVariationSettings) {
-        self.font_variation_settings = settings;
+        // Merge with existing settings
+        let mut result = self.font_variation_settings.variations.clone();
+        for variation in settings.variations {
+            if let Some(existing_variation) = result.iter_mut().find(|v| v.name == variation.name) {
+                existing_variation.value = variation.value;
+            } else {
+                result.push(variation);
+            }
+        }
+
+        self.font_variation_settings = FontVariationSettings { variations: result };
+    }
+
+    pub fn set_font_weight(&mut self, weight: FontWeight) {
+        self.font_weight = weight;
+    }
+
+    pub fn set_font_stretch(&mut self, stretch: FontStretch) {
+        self.font_stretch = stretch;
+    }
+
+    pub fn set_font_style(&mut self, style: FontStyle) {
+        self.font_style = style;
     }
 
     pub fn set_line_height(&mut self, line_height: f64) {
