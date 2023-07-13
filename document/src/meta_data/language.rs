@@ -1,5 +1,6 @@
 use sys_locale::get_locale;
 
+#[derive(Debug)]
 pub struct DocumentLanguage {
     /// ISO 639-1 language codes.
     /// For example "de", "en", ...

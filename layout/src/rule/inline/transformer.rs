@@ -57,7 +57,7 @@ fn process_node(
 ) -> LayoutResult<()> {
     ctx.push_node_styles(node, document)?;
     {
-        let is_consumed = map_node_to_item(node, ctx, result)?;
+        let is_consumed = map_node_to_item(node, document, ctx, result)?;
         if !is_consumed {
             for child in node.children() {
                 if let Some(child_node) = document.structure.get_node(*child) {
@@ -73,11 +73,12 @@ fn process_node(
 
 fn map_node_to_item(
     node: &DocumentNode,
+    document: &Document,
     ctx: &mut LayoutContext,
     result: &mut Vec<Item>,
 ) -> LayoutResult<bool> {
     match node.value() {
-        Text(content) => map_text_node_to_item(content, node, ctx, result),
+        Text(content) => map_text_node_to_item(content, node, document, ctx, result),
         Bold | Italic => Ok(false),
         // TODO Image, math, link, etc.
         _ => {
@@ -93,12 +94,13 @@ fn map_node_to_item(
 fn map_text_node_to_item(
     text: &str,
     node: &DocumentNode,
+    document: &Document,
     ctx: &mut LayoutContext,
     result: &mut Vec<Item>,
 ) -> LayoutResult<bool> {
     let font_ctx = font_util::setup_font(ctx, None)?;
 
-    split_text_into_parts_and_map_to_items(text, node.id, ctx, font_ctx, result)?;
+    split_text_into_parts_and_map_to_items(text, node.id, document, ctx, font_ctx, result)?;
 
     Ok(true)
 }
@@ -122,6 +124,7 @@ fn glue_after(
 fn split_text_into_parts_and_map_to_items(
     text: &str,
     node_id: NodeId,
+    document: &Document,
     ctx: &mut LayoutContext,
     font_ctx: FontContext,
     result: &mut Vec<Item>,
@@ -138,6 +141,7 @@ fn split_text_into_parts_and_map_to_items(
                 split_word_into_syllables_and_map_to_items(
                     &buf.trim(),
                     node_id,
+                    document,
                     ctx,
                     &font_ctx,
                     minus_char_width,
@@ -193,6 +197,7 @@ fn split_text_into_parts_and_map_to_items(
         split_word_into_syllables_and_map_to_items(
             &buf.trim(),
             node_id,
+            document,
             ctx,
             &font_ctx,
             minus_char_width,
@@ -206,13 +211,17 @@ fn split_text_into_parts_and_map_to_items(
 fn split_word_into_syllables_and_map_to_items(
     word: &str,
     node_id: NodeId,
+    document: &Document,
     ctx: &mut LayoutContext,
     font_ctx: &FontContext,
     minus_char_width: Distance,
     result: &mut Vec<Item>,
 ) -> LayoutResult<()> {
     let style = ctx.current_style().clone();
-    let lang = Lang::English;
+
+    let lang_code_bytes = document.meta_data.language.language_code.as_bytes();
+    let lang_code: [u8; 2] = lang_code_bytes.try_into()?;
+    let lang = Lang::from_iso(lang_code).unwrap_or(Lang::English);
     let syllables: Vec<&str> = hyphenate(word, lang).collect();
     let syllable_count = syllables.len();
     for (idx, syllable) in syllables.into_iter().enumerate() {

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DocumentVariables {
     lookup: HashMap<String, String>,
 }

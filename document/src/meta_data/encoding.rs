@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct DocumentEncoding {
     name: String,
 }
@@ -9,8 +10,8 @@ impl DocumentEncoding {
         }
     }
 
-    pub fn name(self) -> String {
-        self.name
+    pub fn name(&self) -> &str {
+        &self.name
     }
 }
 

@@ -10,7 +10,7 @@ pub use language::DocumentLanguage;
 pub use variables::DocumentVariables;
 pub use version::DocumentVersion;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DocumentMetaData {
     pub encoding: DocumentEncoding,
     pub language: DocumentLanguage,

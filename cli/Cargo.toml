@@ -10,10 +10,13 @@ repository = "https://github.com/bennyboer/letter"
 
 [dependencies]
 document = { path = "../document" }
+metadata = { path = "../metadata" }
 script = { path = "../script" }
 style = { path = "../style" }
 layout = { path = "../layout" }
 typeset = { path = "../typeset" }
 export = { path = "../export" }
+encoding_rs = "0.8.32"
+encoding_rs_io = "0.1.7"
 log = "0.4.17"
 simple_logger = "4.0.0"

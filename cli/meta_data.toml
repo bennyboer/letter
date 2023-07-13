@@ -1,0 +1,9 @@
+authors = [
+    "Benjamin Eder <barny.eder@gmail.com>"
+]
+version = "0.1.0-DEV"
+encoding = "utf-8"
+language = "de-DE"
+
+[variables]
+release-date = "10. August 2023"

@@ -1,0 +1,38 @@
+<heading>Einleitung</heading>
+
+<paragraph>
+    In der traditionellen, nicht-digitalen Zeichensetzung legte man Buchstaben neben Buchstaben.
+    Die dabei zum Einsatz kommenden rechteckigen Formen je Glyphe konnten nicht näher aneinandergelegt werden, als es die jeweilige Form erlaubt.
+    Jedoch erhält man bei vielen Glyphenkombinationen, wie beispielsweise A und V, ein ästhetisch ansprechenderes Ergebnis, wenn man die Zeichen näher aneinander anordnet.
+    Diesen Vorgang nennt man Unterschneidung oder Kerning.
+</paragraph>
+
+<paragraph>
+    In modernen OpenType Schriftarten werden Kerninginformationen in speziellen Tabellen gehalten.
+    Die Erstellung dieser, ist ein denkbar aufwändiger und daher teurer Prozess.
+    Will man sich beispielsweise alle möglichen Glyphenpaare von Groß- und Kleinbuchstaben vornehmen, muss man sich bereits 2704 Paare ansehen.
+    Nun ist Kerning jedoch nicht nur für Groß- und Kleinbuchstaben sinnvoll, sondern auch beispielsweise für Satzzeichen.
+    Bei einer solch unüberschaubaren Anzahl an Glyphenpaaren kann man sich realistisch nur um eine Teilmenge kümmern.
+    Gerade frei verfügbare Schriftarten verfügen daher häufig über keine oder wenige Kerninginformationen.
+</paragraph>
+
+<section>
+    <heading>Ziel der Arbeit</heading>
+
+    <paragraph>
+        Im Zuge der Masterarbeit sollen Möglichkeiten des automatisierten Kernings von Schriftarten erarbeitet werden.
+        Beispielsweise enthält die beliebte Desktop-Publishing-Software Adobe InDesign einen Algorithmus zum sogenannten <i>optischen</i> Kerning, also der Unterschneidung anhand der Glyphenformen.
+        Leider sind weitere Informationen über den Aufbau der Algorithmus nicht öffentlich erhältlich.
+        Allerdings existieren Ideen einen solchen Algorithmus umzusetzen.
+        Eine eher neue Entwicklung stellt die Verwendung von tiefen neuronalen Netzen dar, die mit der Hilfe von bestehenden Kerninginformationen aus Schriftarten trainiert werden können.
+        Die erwähnten Algorithmen sollen zusammen mit eigenen Ideen im Verlauf der Arbeit beschrieben, ausprobiert, verglichen und weiterentwickelt werden.
+        Im Optimalfall wird ein Algorithmus gefunden, welcher das manuelle Kerning für den Schriftdesigner erleichtert oder sogar gänzlich unnötig macht.
+    </paragraph>
+
+    <heading>Zeitplan</heading>
+
+    <paragraph>
+        Der grobe Arbeitsaufbau wird um einen Projektplan ergänzt, um eine zeitliche Perspektive zu bieten.
+        Als Teilzeitstudent stünden 12 Monate als Bearbeitungszeit zur Verfügung, jedoch sollten planmäßig 6 Monate ausreichen.
+    </paragraph>
+</section>

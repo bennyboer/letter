@@ -5,6 +5,7 @@ members = [
     "export",
     "font",
     "layout",
+    "metadata",
     "script",
     "style",
     "typeset",
